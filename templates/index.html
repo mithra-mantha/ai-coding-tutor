@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot 2</title>
+    <style>
+        :root {
+            --chat-background-color: rgb(200, 200, 200);
+            --user-message-color: rgb(141, 255, 249);
+            --ai-message-color: rgb(122, 255, 140);
+        }
+        #chat {
+            width: 50%;
+            height: 100%;
+            background-color: var(--chat-background-color);
+            padding: 10px;
+            overflow-y: auto;
+        }
+        .user-message {
+            margin-left: 10px;
+            margin-right: auto;
+            background-color: var(--user-message-color);
+        }
+        .ai-message {
+            margin-right: 10px;
+            margin-left: auto;
+            background-color: var(--ai-message-color);
+ 
+        }
+        .user-message, .ai-message {
+            width: max-content;
+            max-width: 80%;
+            border: 2px solid black;    
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 5px;
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat">
+        <div id="messages-container">
+
+        </div>
+        <form id="message-form">
+            <label for="message-input">Type your message below:</label>
+            <input id="message-input" type="text" required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked@18.0.11/lib/marked.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
+    <script>
+"use strict";
+function addMessageToChat(message, isFromHuman) {
+    $(`
+<div class="message ${isFromHuman ? 'user-message' : 'ai-message'}">${message}</div>
+    `).appendTo("#messages-container");
+}
+$("#message-form").on("submit", async function (event) {
+    event.preventDefault();
+    const value = $("#message-input").val();
+    addMessageToChat(value, true);
+    $("#message-input").val("")
+    try {
+        const rawResponse = await fetch($("#messages-container").length < 2 ? "/api/create-chat" : "/api/chat", {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({message:value}),
+        });
+        if (!rawResponse.ok) {
+            throw new Error(`HTTP Error! Status: ${rawResponse.status}.`);
+        }
+        const response = await rawResponse.json();
+        if (!response.message) {
+            throw new Error("Response empty.");
+        }
+        const conversationId = response.id
+        const aiMessageHTML = marked.parse(response.message);
+        addMessageToChat(aiMessageHTML, false);
+    } catch (error) {
+        console.error(error);
+    }
+});
+    </script>
+</body>
+</html>

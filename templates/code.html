@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Coding Tutor</title>
+    <style>
+        :root {
+            --chat-background-color: rgb(200, 200, 200);
+            --user-message-color: rgb(141, 255, 249);
+            --ai-message-color: rgb(122, 255, 140);
+            --chat-height: 95vh;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #chat {
+            width: 50%;
+            height: var(--chat-height);
+            max-height: var(--chat-height);
+            min-height: var(--chat-height);
+            background-color: var(--chat-background-color);
+            padding: 10px;
+            position: relative;
+            
+        }
+        #messages-container {
+            height: calc(var(--chat-height) * 0.95);
+            overflow-y: auto;
+        }
+        .user-message {
+            margin-left: 10px;
+            margin-right: auto;
+            background-color: var(--user-message-color);
+        }
+        .ai-message {
+            margin-right: 10px;
+            margin-left: auto;
+            background-color: var(--ai-message-color);
+ 
+        }
+        .user-message, .ai-message {
+            width: max-content;
+            max-width: 80%;
+            border: 2px solid black;    
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 5px;
+            overflow-wrap: break-word;
+        }
+        #message-form {
+            position: absolute;
+            bottom: 0%;
+            width: 100%;
+        }
+        #message-input {
+            border-radius: 5px;
+            min-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+            resize: none;
+            field-sizing: content;
+            max-height: 20vh;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        code {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat">
+        <div id="messages-container">
+
+        </div>
+        <form id="message-form">
+            <textarea id="message-input" aria-label="Type your prompt here." placeholder="Type your prompt here..." rows="3"></textarea><br>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked@18.0.11/lib/marked.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
+    <script>
+"use strict";
+function addMessageToChat(message, isFromHuman) {
+    $(`
+<div class="message ${isFromHuman ? 'user-message' : 'ai-message'}">${message}</div>
+    `).appendTo("#messages-container");
+}
+$("#message-input").on("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        $("#message-form").trigger("submit");
+    }
+})
+$("#message-form").on("submit", async function (event) {
+    event.preventDefault();
+    const value = $("#message-input").val();
+    addMessageToChat(value, true);
+    $("#message-input").val("")
+    try {
+        const rawResponse = await fetch($("#messages-container").length < 2 ? "/api/create-chat" : "/api/chat", {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({message:value}),
+        });
+        if (!rawResponse.ok) {
+            throw new Error(`HTTP Error! Status: ${rawResponse.status}.`);
+        }
+        const response = await rawResponse.json();
+        if (!response.message) {
+            throw new Error("Response empty.");
+        }
+        const conversationId = response.id
+        const aiMessageHTML = marked.parse(response.message);
+        addMessageToChat(aiMessageHTML, false);
+    } catch (error) {
+        console.error(error);
+    }
+});
+    </script>
+</body>
+</html>

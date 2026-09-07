@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if mode == "login" %}
+            Log in
+        {% else %}
+            Sign Up
+        {% endif %}
+    </title>
+    <style>
+        .centered {
+            text-align: center;
+            position: absolute;
+            left: 50%;
+            top: 40%;
+            transform: translate(-50%, -50%);
+            *:not(h1) {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body data-user-email="">
+    <div id="login-state">
+        <form id="login-form" class="centered">
+            <h1>Enter your email below:</h1>
+            <p id="email-warning"></p>
+            <label for="email-input">Username: </label>
+            <input type="email" id="email-input" name="email"><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <div id="code-state">
+        <form id="code-form" class="centered">
+            <fieldset id="code-form-disable">
+                <label for="code-input">Enter the code we just sent to <span></span>.</label>
+                <p id="code-warning"></p>
+                <input id="code-input" type="text" inputmode="numeric" pattern="[0-9]*">
+                <button type="submit">Log in</button>
+            </fieldset>
+        </form>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
+    <script>
+"use strict";
+$("#code-state").hide();
+$("#login-form").on("submit", async function (event) {
+    event.preventDefault();
+    const email = $("#email-input").val();
+    if (!/[^@\s]+@[^@\s]+\.[^@\s]{2,}/i.test(email)) {
+        // If it's not a valid email, then don't let it pass.
+        $("#email-warning").text("Your email is invalid.");
+        return;
+    }
+    const rawResponse = await fetch(
+    // @ts-ignore
+    {% if mode == "login" %}
+    "/api/login/check-email"
+    {% else %}
+    "/api/register/check-email"
+    {% endif %}
+    
+    , {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            email:email,
+        })
+    });
+    if (!rawResponse.ok) {
+        throw new Error(`HTTP Error! Status: ${rawResponse.status}.`);
+    }
+    const response = await rawResponse.json();
+    if (response.redirect) {
+        window.location.href = response.link;
+        return;
+    } 
+    if (response.warning) {
+        $("#email-warning").html(response.warning)
+    }
+    $("#login-state").hide();
+    $("#code-state").show();
+    $("#code-form label span").text(email);
+    $("body").attr("data-user-email", email)
+});
+$("#code-form").on("submit", async function (event) {
+    event.preventDefault();
+    const code = $("#code-input").val();
+    if (code.length !== 6) {
+        return;
+    }
+    const rawResponse = await fetch(
+    // @ts-ignore
+    {% if mode == "login" %} "/api/login/check-code" {% else %}"/api/register/check-code"{% endif %}, {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            code:code,
+            email:$("body").attr("data-user-email"),
+        })
+    });
+    const response = await rawResponse.json();
+    if (response.redirect) {
+        window.location.href = response.link;
+        return;
+    }
+    if (response["code-wrong"]) {
+        $("#code-warning").text("Your code is wrong. Try again in 5 seconds.")
+        $("#code-form-disable").prop("disabled", true)
+        countdown = 5;
+        intervalId = setInterval(() => {
+            countdown--
+            if (countdown === 0) {
+                $("#code-warning").text("")
+                $("#code-form-disable").prop("disabled", false);
+            } else {
+                $("#code-warning").text(`Your code is wrong. Try again in ${countdown} seconds.`);
+            }
+        }, 1000)
+    }
+});
+    </script>
+</body>
+</html>

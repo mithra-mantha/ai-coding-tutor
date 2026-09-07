@@ -76,12 +76,14 @@ $("#login-form").on("submit", async function (event) {
         throw new Error(`HTTP Error! Status: ${rawResponse.status}.`);
     }
     const response = await rawResponse.json();
+    console.log(response)
     if (response.redirect) {
         window.location.href = response.link;
         return;
     } 
     if (response.warning) {
         $("#email-warning").html(response.warning)
+        return;
     }
     $("#login-state").hide();
     $("#code-state").show();
@@ -114,12 +116,13 @@ $("#code-form").on("submit", async function (event) {
     if (response["code-wrong"]) {
         $("#code-warning").text("Your code is wrong. Try again in 5 seconds.")
         $("#code-form-disable").prop("disabled", true)
-        countdown = 5;
-        intervalId = setInterval(() => {
+        let countdown = 5;
+        const intervalId = setInterval(() => {
             countdown--
             if (countdown === 0) {
                 $("#code-warning").text("")
                 $("#code-form-disable").prop("disabled", false);
+                clearInterval(intervalId)
             } else {
                 $("#code-warning").text(`Your code is wrong. Try again in ${countdown} seconds.`);
             }

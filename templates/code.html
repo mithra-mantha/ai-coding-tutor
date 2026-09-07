@@ -4,23 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Coding Tutor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/css/ace.min.css">
     <style>
         :root {
             --chat-background-color: rgb(200, 200, 200);
             --user-message-color: rgb(141, 255, 249);
             --ai-message-color: rgb(122, 255, 140);
-            --chat-height: 95vh;
+            --chat-height: 100%;
             font-family: Arial, Helvetica, sans-serif;
+            overflow-x: hidden;
         }
         #chat {
-            width: 50%;
+            width: 30%;
             height: var(--chat-height);
             max-height: var(--chat-height);
             min-height: var(--chat-height);
             background-color: var(--chat-background-color);
             padding: 10px;
-            position: relative;
-            
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            box-sizing: border-box;
         }
         #messages-container {
             height: calc(var(--chat-height) * 0.95);
@@ -65,22 +69,68 @@
         code {
             white-space: pre-wrap;
         }
+        #editor {
+            width: 50%;
+            height: 100%;
+            position: relative;
+        }
+        #code {
+            height: 100%;
+            width: 70%;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            box-sizing: border-box !important;
+        }
+        .ace_gutter {
+            background-color: rgb(180, 180, 180) !important;
+        }
+        .ace_gutter-active-line {
+            background-color: rgb(200, 200, 200) !important;
+        }
+        .ace_content {
+            background-color: rgb(233, 233, 233) !important;
+        }
+        #html-preview {
+            position: absolute;
+            left: 50%;
+            width: 50%;
+            height: 100%;
+            top: 0px;
+        }
     </style>
 </head>
 <body>
+    <div id="code">
+        <div id="editor"></div>
+        <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts"></iframe>
+    </div>
     <div id="chat">
-        <div id="messages-container">
-
-        </div>
+        <div id="messages-container"></div>
         <form id="message-form">
-            <textarea id="message-input" aria-label="Type your prompt here." placeholder="Type your prompt here..." rows="3"></textarea><br>
+            <textarea id="message-input" aria-label="Ask your question here..." placeholder="Type your prompt here..." rows="3"></textarea><br>
             <button type="submit">Send</button>
         </form>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked@18.0.11/lib/marked.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ace.min.js"></script>
     <script>
 "use strict";
+let editor = ace.edit("editor")
+editor.setTheme("ace/theme/dawn");
+editor.session.setMode("ace/mode/html")
+editor.resize();
+editor.setOptions({
+    fontSize: "16px",
+    fontFamily: "Courier New, Courier, monospace",
+    showPrintMargin: false,
+    wrap: true,
+});
+editor.session.on("input", function () {
+    // This event fires with a slight 50ms debounce effect, so we don't need to manually create one.
+    $("#html-preview")[0].srcdoc = editor.getValue();
+})
 function addMessageToChat(message, isFromHuman) {
     $(`
 <div class="message ${isFromHuman ? 'user-message' : 'ai-message'}">${message}</div>

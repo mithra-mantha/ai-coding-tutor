@@ -79,7 +79,12 @@ def chat():
     print("Done!")
     return jsonify({"message":conversation.output_text, "id":conversation_id})
 @app.route("/api/login/check-email", methods=["POST"])
-def login_check_email(is_registering=False):
+def login_check_email():
+    return check_email()
+@app.route("/api/register/check-email", methods=["POST"])
+def register_check_email():
+    return check_email(True)
+def check_email(is_registering=False):
     data = request.get_json()
     email = data.get("email")
     # First let's check if their email already exists.
@@ -112,13 +117,9 @@ def login_check_code():
     if check_password_hash(sent_code, user_code):
         user_id = sql_query("SELECT id FROM users WHERE email = ?", (email,))[0][0]
         login_user(User(user_id, email))
-        return jsonify({"redirect": True, "link": url_for("code_render"), "optional":False})
+        return jsonify({"redirect": True, "link": url_for("code_render")})
     else:
         return jsonify({"code-wrong":True})
-@app.route("/api/register/check-email", methods=["POST"])
-def register_check_email():
-    # Same code for now, just in case later I need to do something
-    return login_check_email(is_registering=True)
 @app.route("/api/register/check-code", methods=["POST"])
 def register_check_code():
     data = request.get_json()
@@ -135,9 +136,9 @@ def register_check_code():
             except sqlite3.IntegrityError as error:
                 # This means that clearly someone accidentally signed up instead of logging in, but let's log them in anyway
                 # This is technically prevented in the check_email part but just in case...
-                user_id = sql_query("SELECT user_id FROM users WHERE email = ?", (email,))[0][0]
+                user_id = sql_query("SELECT id FROM users WHERE email = ?", (email,))[0][0]
         login_user(User(user_id, email))
-        return jsonify({"redirect": True, "link": url_for("code_render"), "optional":False})
+        return jsonify({"redirect": True, "link": url_for("code_render")})
     else:
         return jsonify({"code-wrong":True})
 @app.errorhandler(BadRequest)
@@ -155,7 +156,6 @@ def sql_query(query, placeholders=None):
             cursor.execute(query, placeholders)
         else:
             cursor.execute(query)
-        connection.commit()
         return cursor.fetchall()
 def sql_modify(query, placeholders=None):
     """SQLite function that is for queries that do not return something."""
@@ -170,4 +170,3 @@ sql_modify("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREME
 sql_modify("CREATE TABLE IF NOT EXISTS codes (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE, hashed_code TEXT)")
 if __name__ == "__main__":
     app.run(debug=True)
-    

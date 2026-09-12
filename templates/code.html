@@ -34,6 +34,7 @@
             margin-left: 10px;
             margin-right: auto;
             background-color: var(--user-message-color);
+            white-space: pre-wrap;
         }
         .ai-message {
             margin-right: 10px;
@@ -100,24 +101,35 @@
         }
     </style>
 </head>
-<body>
+<body data-conversation-id= "{% if history %}{{ conversation_id }}{% endif %}"
+>
     <div id="code">
         <div id="editor"></div>
-        <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts"></iframe>
+        <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
     </div>
     <div id="chat">
-        <div id="messages-container"></div>
+        <div id="messages-container">
+            <!-- {% set md = Markdown() %} -->
+            <!-- {% for prompt, reply in history: %} -->
+            <div class="message user-message">{{ prompt }}</div>
+            <div class="message ai-message">{{ md.render(reply) | safe}}</div>
+            <!-- {% endfor %} -->
+        </div>
         <form id="message-form">
             <textarea id="message-input" aria-label="Ask your question here..." placeholder="Type your prompt here..." rows="3"></textarea><br>
             <button type="submit">Send</button>
         </form>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/marked@18.0.11/lib/marked.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ace.min.js"></script>
     <script>
 "use strict";
-let editor = ace.edit("editor")
+let globals = {
+    conversationId:
+    $("body").attr("data-conversation-id").trim() ? $("body").attr("data-conversation-id").trim() : null
+    ,
+};
+let editor = ace.edit("editor");
 editor.setTheme("ace/theme/dawn");
 editor.session.setMode("ace/mode/html")
 editor.resize();
@@ -127,17 +139,28 @@ editor.setOptions({
     showPrintMargin: false,
     wrap: true,
 });
-editor.session.on("input", function () {
+editor._$emitInputEvent.schedule(500);
+editor.on("input", function () {
     // This event fires with a slight 50ms debounce effect, so we don't need to manually create one.
-    $("#html-preview")[0].srcdoc = editor.getValue();
-})
+    $("#html-preview")[0].srcdoc = "<base target='_blank'>" + editor.getValue();
+// Notice how I prepend the base tag so that the link doesn't open directly inside the iframe and crash it.
+});
 function addMessageToChat(message, isFromHuman) {
-    $(`
-<div class="message ${isFromHuman ? 'user-message' : 'ai-message'}">${message}</div>
-    `).appendTo("#messages-container");
+    const newEl = $(`
+<div class="message ${isFromHuman ? 'user-message' : 'ai-message'}"></div>
+    `)
+    if (isFromHuman) {
+        // The human likely didn't want to turn it to html.
+        newEl.text(message);
+    } else {
+        // However, the ai definitely put the html entities on purpose.
+        newEl.html(message);
+    }
+    newEl.appendTo("#messages-container");
 }
 $("#message-input").on("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
+        // We want to submit it if they press enter, but add a newline like the default behavior if it is shift+enter.
         event.preventDefault();
         $("#message-form").trigger("submit");
     }
@@ -145,15 +168,24 @@ $("#message-input").on("keydown", (event) => {
 $("#message-form").on("submit", async function (event) {
     event.preventDefault();
     const value = $("#message-input").val();
+    const container = $("#messages-container")[0]
     addMessageToChat(value, true);
-    $("#message-input").val("")
+    $("#message-input").val("");
+    // Scroll to the bottom automatically, to the end of the message.
+    setTimeout(() => {
+        container.scrollBy({
+            top:container.scrollHeight,
+            left: 0,
+            behavior:"smooth",
+        });
+    }, 10)
     try {
-        const rawResponse = await fetch($("#messages-container").length < 2 ? "/api/create-chat" : "/api/chat", {
+        const rawResponse = await fetch($("#messages-container").children().length < 2 ? "/api/create-chat" : "/api/chat", {
             method:"POST",
             headers:{
                 "Content-Type":"application/json"
             },
-            body:JSON.stringify({message:value}),
+            body:JSON.stringify({message:value, code:editor.getValue(), id:globals.conversationId}),
         });
         if (!rawResponse.ok) {
             throw new Error(`HTTP Error! Status: ${rawResponse.status}.`);
@@ -162,12 +194,18 @@ $("#message-form").on("submit", async function (event) {
         if (!response.message) {
             throw new Error("Response empty.");
         }
-        const conversationId = response.id
-        const aiMessageHTML = marked.parse(response.message);
-        addMessageToChat(aiMessageHTML, false);
+        globals.conversationId = response.id
+        addMessageToChat(response.message, false);
+        // Scroll again so that the AI message from the top is visible, so they can start reading.
+        container.scrollBy({
+            top:container.offsetHeight, // Since we earlier scrolled so that the user message is at the bottom, scroll the height of the container so that the message is now at the top.
+            left: 0,
+            behavior:"smooth",
+        });
     } catch (error) {
         console.error(error);
     }
+    
 });
     </script>
 </body>

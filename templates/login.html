@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-        {% if mode == "login" %}
+        <!-- {% if mode == "login" %} -->
             Log in
-        {% else %}
+        <!-- {% else %} -->
             Sign Up
-        {% endif %}
+        <!-- {% endif %} -->
     </title>
     <style>
         .centered {
@@ -57,11 +57,11 @@ $("#login-form").on("submit", async function (event) {
     }
     const rawResponse = await fetch(
     // @ts-ignore
-    {% if mode == "login" %}
+    // {% if mode == "login" %}
     "/api/login/check-email"
-    {% else %}
+    // {% else %}
     "/api/register/check-email"
-    {% endif %}
+    // {% endif %}
     
     , {
         method:"POST",
@@ -70,6 +70,7 @@ $("#login-form").on("submit", async function (event) {
         },
         body:JSON.stringify({
             email:email,
+            
         })
     });
     if (!rawResponse.ok) {
@@ -98,7 +99,12 @@ $("#code-form").on("submit", async function (event) {
     }
     const rawResponse = await fetch(
     // @ts-ignore
-    {% if mode == "login" %} "/api/login/check-code" {% else %}"/api/register/check-code"{% endif %}, {
+    // {% if mode == "login" %} 
+    "/api/login/check-code" 
+    // {% else %}
+    "/api/register/check-code"
+    // {% endif %}
+    , {
         method:"POST",
         headers:{
             "Content-Type":"application/json"

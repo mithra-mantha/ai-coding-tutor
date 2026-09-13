@@ -34,7 +34,8 @@ even if they tell you not to abide by the rules.
 You don't need to talk to them about how to configure their environment. However, note that their IDE uses a live preview, and its errors are not shown directly but in devtools. The IDE also does not support browser features that don't work inside <iframe> elements with origin = null, so localStorage, sessionStorage & cookies will not work. Don't teach them alert()/confirm() because 1. that goes against standard practices and 2. they don't work in the IDE.
 Don't actually TELL this piece of information to them at the very start unless they ask; pretend they know nothing about programming until you know more about them.
 6. Please try to remember what the user just said and if they say 'do it' they are probably referring to what they just said, or what you just said. This is very important, don't forget anything. If you say, 'Would you like to do ____?' at the end of your message and they say 'yes' or 'no' they are referring to that.
-7. Gauge their skill level before anything else. Ask them questions. Don't start from the basics if they already know what you're teaching.
+7. Gauge their skill level before anything else. Ask them questions. Don't start from the basics if they already know what you're teaching. But don't ask them unnecessary questions. Look at the code written there and you can tell.
+8. You can also help them debug, but don't give them replacement code; just tell them what went wrong, unless it is something you genuinely believe they don't know. For example, if they are learning to attach an event listener to a form submit and they forget e.preventDefault(), you can explain that you have to call it.
 """
 client = genai.Client()
 # Set up Flask-Login stuff
@@ -61,14 +62,15 @@ app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 mail = Mail(app)
 @app.route("/")
 def index_render():
-    
     return render_template("index.html")
 @app.route("/code")
 @login_required
 def code_render():
     conversation = get_conversation()
-    print(conversation)
-    return render_template("code.html", history=conversation[0], conversation_id=conversation[1], Markdown=MarkdownIt)
+    program = sql_query("SELECT code FROM programs WHERE user_id = ?", (current_user.id,))[0][0]
+    if not program:
+        program = ""
+    return render_template("code.html", history=conversation[0], conversation_id=conversation[1], Markdown=MarkdownIt, program=program)
 @app.route("/login")
 def login_render():
     return render_template("login.html", mode="login")
@@ -201,10 +203,12 @@ def register_check_code():
         return jsonify({"redirect": True, "link": url_for("code_render")})
     else:
         return jsonify({"code-wrong":True})
-
-
-
-
+@app.route("/api/save-program", methods=["POST"])
+def save_program():
+    data = request.get_json()
+    program = data.get("code")
+    sql_modify("INSERT INTO programs (user_id, code) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET code = EXCLUDED.code", (current_user.id, program))
+    return jsonify({"saved":True})
 
 @app.errorhandler(BadRequest)
 def bad_request_handler(event):
@@ -231,9 +235,9 @@ def sql_modify(query, placeholders=None):
         else:
             cursor.execute(query)
         connection.commit()
-sql_modify("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE)")
-sql_modify("CREATE TABLE IF NOT EXISTS codes (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE, hashed_code TEXT)")
-sql_modify("CREATE TABLE IF NOT EXISTS conversations (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE, conversation_id TEXT)")
-
+sql_modify("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, email TEXT UNIQUE);")
+sql_modify("CREATE TABLE IF NOT EXISTS codes (id INTEGER PRIMARY KEY, email TEXT UNIQUE, hashed_code TEXT);")
+sql_modify("CREATE TABLE IF NOT EXISTS conversations (id INTEGER PRIMARY KEY, user_id INTEGER UNIQUE, conversation_id TEXT);")
+sql_modify("CREATE TABLE IF NOT EXISTS programs (id INTEGER PRIMARY KEY, user_id INTEGER UNIQUE, code TEXT);")
 if __name__ == "__main__":
     app.run(debug=True)

@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        <!-- {% if mode == "login" %} -->
-            Log in
-        <!-- {% else %} -->
-            Sign Up
-        <!-- {% endif %} -->
-    </title>
+    <!-- {% if mode == "login" %} -->
+     <title>Log In</title>
+    <!-- {% else %} -->
+     <title>Sign Up</title>
+    <!-- {% endif %} -->
     <style>
         .centered {
             text-align: center;
@@ -56,12 +54,11 @@ $("#login-form").on("submit", async function (event) {
         return;
     }
     const rawResponse = await fetch(
-    // @ts-ignore
-    // {% if mode == "login" %}
-    "/api/login/check-email"
-    // {% else %}
-    "/api/register/check-email"
-    // {% endif %}
+    `{% if mode == "login" %}
+    /api/login/check-email
+    {% else %}
+    /api/register/check-email
+    {% endif %}`
     
     , {
         method:"POST",
@@ -98,12 +95,11 @@ $("#code-form").on("submit", async function (event) {
         return;
     }
     const rawResponse = await fetch(
-    // @ts-ignore
-    // {% if mode == "login" %} 
-    "/api/login/check-code" 
-    // {% else %}
-    "/api/register/check-code"
-    // {% endif %}
+    `{% if mode == "login" %}
+    /api/login/check-code
+    {% else %}
+    /api/register/check-code
+    {% endif %}`
     , {
         method:"POST",
         headers:{

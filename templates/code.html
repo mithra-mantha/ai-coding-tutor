@@ -5,104 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Coding Tutor</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/css/ace.min.css">
-    <style>
-        :root {
-            --chat-background-color: rgb(200, 200, 200);
-            --user-message-color: rgb(141, 255, 249);
-            --ai-message-color: rgb(122, 255, 140);
-            --chat-height: 100%;
-            font-family: Arial, Helvetica, sans-serif;
-            overflow-x: hidden;
-        }
-        #chat {
-            width: 30%;
-            height: var(--chat-height);
-            max-height: var(--chat-height);
-            min-height: var(--chat-height);
-            background-color: var(--chat-background-color);
-            padding: 10px;
-            position: absolute;
-            right: 0px;
-            top: 0px;
-            box-sizing: border-box;
-        }
-        #messages-container {
-            height: calc(var(--chat-height) * 0.95);
-            overflow-y: auto;
-        }
-        .user-message {
-            margin-left: 10px;
-            margin-right: auto;
-            background-color: var(--user-message-color);
-            white-space: pre-wrap;
-        }
-        .ai-message {
-            margin-right: 10px;
-            margin-left: auto;
-            background-color: var(--ai-message-color);
- 
-        }
-        .user-message, .ai-message {
-            width: max-content;
-            max-width: 80%;
-            border: 2px solid black;    
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 5px;
-            overflow-wrap: break-word;
-        }
-        #message-form {
-            position: absolute;
-            bottom: 0%;
-            width: 100%;
-        }
-        #message-input {
-            border-radius: 5px;
-            min-width: 90%;
-            margin-left: auto;
-            margin-right: auto;
-            resize: none;
-            field-sizing: content;
-            max-height: 20vh;
-            font-family: inherit;
-            font-size: 1rem;
-        }
-        code {
-            white-space: pre-wrap;
-        }
-        #editor {
-            width: 50%;
-            height: 100%;
-            position: relative;
-        }
-        #code {
-            height: 100%;
-            width: 70%;
-            position: absolute;
-            left: 0px;
-            top: 0px;
-            box-sizing: border-box !important;
-        }
-        .ace_gutter {
-            background-color: rgb(180, 180, 180) !important;
-        }
-        .ace_gutter-active-line {
-            background-color: rgb(200, 200, 200) !important;
-        }
-        .ace_content {
-            background-color: rgb(233, 233, 233) !important;
-        }
-        #html-preview {
-            position: absolute;
-            left: 50%;
-            width: 50%;
-            height: 100%;
-            top: 0px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{url_for('static', filename='code-styles.css')}}">
 </head>
-<body data-conversation-id= "{% if history %}{{ conversation_id }}{% endif %}"
->
+<body data-conversation-id= "{% if history %}{{ conversation_id }}{% endif %}" data-program="{% if program %}{{ program }}{% endif %}">
+    <div id="top"><button id="logout-button">Log out</button></div>
     <div id="code">
         <div id="editor"></div>
         <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
@@ -115,6 +21,7 @@
             <div class="message ai-message">{{ md.render(reply) | safe}}</div>
             <!-- {% endfor %} -->
         </div>
+        <button id="new-chat-button">Create New Chat</button>
         <form id="message-form">
             <textarea id="message-input" aria-label="Ask your question here..." placeholder="Type your prompt here..." rows="3"></textarea><br>
             <button type="submit">Send</button>
@@ -129,6 +36,9 @@ let globals = {
     $("body").attr("data-conversation-id").trim() ? $("body").attr("data-conversation-id").trim() : null
     ,
 };
+/* You've probably noticed something- there are two copies of the conversation id; one in JavaScript and one in HTML.
+The HTML one is only for Jinja to manipulate at the load of the page. Afterward, JavaScript handles the rest. I didn't put Jinja directly in JavaScript because then my IDE throws an error; it's not native JavaScript syntax. And my IDE's Jinja mode is nowhere near as excellent as its HTML mode.
+*/
 let editor = ace.edit("editor");
 editor.setTheme("ace/theme/dawn");
 editor.session.setMode("ace/mode/html")
@@ -139,12 +49,26 @@ editor.setOptions({
     showPrintMargin: false,
     wrap: true,
 });
-editor._$emitInputEvent.schedule(500);
-editor.on("input", function () {
-    // This event fires with a slight 50ms debounce effect, so we don't need to manually create one.
-    $("#html-preview")[0].srcdoc = "<base target='_blank'>" + editor.getValue();
-// Notice how I prepend the base tag so that the link doesn't open directly inside the iframe and crash it.
+let editorTimeoutId;
+editor.session.on("change", function (delta) {
+    clearTimeout(editorTimeoutId);
+    editorTimeoutId = setTimeout(async function () {
+        const newValue = editor.getValue()
+        $("#html-preview").attr("srcdoc", "<base target='_blank'>" + newValue);
+        // That way if the create a link then the <base> will redirect them to a new tab and not destroy the iframe.
+        await fetch("/api/save-program", {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                code:newValue,
+            })
+        });
+    }, 500)
 });
+editor.setValue($("body").attr("data-program"));
+$("body").attr("data-program", "")
 function addMessageToChat(message, isFromHuman) {
     const newEl = $(`
 <div class="message ${isFromHuman ? 'user-message' : 'ai-message'}"></div>
@@ -205,8 +129,13 @@ $("#message-form").on("submit", async function (event) {
     } catch (error) {
         console.error(error);
     }
-    
+ 
 });
+$("#new-chat-button").on("click", function () {
+    $("#messages-container").empty();
+    $("body").removeAttr("data-conversation-id");
+    globals.conversationId = null
+})
     </script>
 </body>
 </html>

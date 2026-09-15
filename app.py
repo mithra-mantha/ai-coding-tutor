@@ -78,7 +78,7 @@ def login_render():
 def register_render():
     return render_template("login.html", mode="register")
 
-@app.route("/api/create-chat", methods=["POST"])
+@app.route("/api/chat", methods=["POST"])
 def create_chat():
     print("Waiting for ai response...")
     data = request.get_json()
@@ -93,7 +93,7 @@ def create_chat():
     print("Done!")
     save_conversation(conversation.id)
     return jsonify({"message":md.render(conversation.output_text), "id":conversation.id})
-@app.route("/api/chat", methods=["POST"])
+@app.route("/api/chat", methods=["PATCH"])
 def chat():
     print("Waiting for ai response...")
     data = request.get_json()
@@ -110,6 +110,10 @@ def chat():
     print("Done!")
     save_conversation(conversation.id)
     return jsonify({"message":md.render(conversation.output_text), "id":conversation.id})
+@app.route("/api/chat", methods=["DELETE"])
+def delete_conversation():
+    sql_modify("DELETE FROM conversations WHERE user_id = ?", (current_user.id,))
+    return jsonify({"success":True})
 def save_conversation(id):
     sql_modify("INSERT INTO conversations (conversation_id, user_id) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET conversation_id = EXCLUDED.conversation_id", (id, current_user.id))
 def get_conversation():
@@ -208,7 +212,7 @@ def save_program():
     data = request.get_json()
     program = data.get("code")
     sql_modify("INSERT INTO programs (user_id, code) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET code = EXCLUDED.code", (current_user.id, program))
-    return jsonify({"saved":True})
+    return jsonify({"success":True})
 
 @app.errorhandler(BadRequest)
 def bad_request_handler(event):

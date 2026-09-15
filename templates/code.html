@@ -27,6 +27,7 @@
             <button type="submit">Send</button>
         </form>
     </div>
+    <div id="error-div" style="display: none;"><button id="close-error-div">&#10005;</button><p></p></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ace.min.js"></script>
     <script>
@@ -53,8 +54,32 @@ let editorTimeoutId;
 editor.session.on("change", function (delta) {
     clearTimeout(editorTimeoutId);
     editorTimeoutId = setTimeout(async function () {
+        $("#error-div").hide();
+        $("#error-div p").text("")
+        const errorScript = `
+<script>
+window.onerror = function (message, source, lineno, colno, error) {
+    if (message === "Script error." && lineno === 0) {
+        /* An external library did it, but we don't know what it is. */
+        window.parent.postMessage("Cross-Origin Script Error: A script loaded from an external CDN crashed, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", "*");
+    } else {
+        window.parent.postMessage(\`\${message}: at \${source}. At line \${lineno} column \${colno}.\`, "*");
+    };
+    console.log("Message posted successfully!");
+}; 
+window.onunhandledrejection = function (event) {
+    if (!event.reason || /Script error\\./i.test(event.reason)) {
+        window.parent.postMessage("Cross-Origin Script Error: A script loaded from an external CDN crashed with an unhandled rejected Promise, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", "*");
+    } else {
+        window.parent.postMessage("Unhandled promise rejection: " + event.reason, "*");
+    };
+    console.log("Promise rejected- Message posted successfully!")
+}; 
+<\/script>
+        `.replaceAll("\n", "")
+        // This script sends all errors directly to the main script, which will then show it to the user.
         const newValue = editor.getValue()
-        $("#html-preview").attr("srcdoc", "<base target='_blank'>" + newValue);
+        $("#html-preview").attr("srcdoc", errorScript + "<base target='_blank'>" + newValue);
         // That way if the create a link then the <base> will redirect them to a new tab and not destroy the iframe.
         await fetch("/api/save-program", {
             method:"POST",
@@ -66,6 +91,19 @@ editor.session.on("change", function (delta) {
             })
         });
     }, 500)
+});
+window.addEventListener("message", function (event) {
+    console.log("Received message successfully!")
+    if (event.source !== $("#html-preview")[0].contentWindow) {
+        console.warn("Received suspicious message from an iframe that doesn't match. Information: ", event);
+        return;
+    }
+    const errorMessage = event.data;
+    $("#error-div p").text(errorMessage);
+    $("#error-div").show();
+});
+$("#close-error-div").on("click", function () {
+    $("#error-div").hide();
 });
 editor.setValue($("body").attr("data-program"));
 $("body").attr("data-program", "")
@@ -104,8 +142,8 @@ $("#message-form").on("submit", async function (event) {
         });
     }, 10)
     try {
-        const rawResponse = await fetch($("#messages-container").children().length < 2 ? "/api/create-chat" : "/api/chat", {
-            method:"POST",
+        const rawResponse = await fetch("/api/chat", {
+            method: $("#messages-container").children().length < 2 ? "POST" : "PATCH",
             headers:{
                 "Content-Type":"application/json"
             },
@@ -131,10 +169,13 @@ $("#message-form").on("submit", async function (event) {
     }
  
 });
-$("#new-chat-button").on("click", function () {
+$("#new-chat-button").on("click", async function () {
     $("#messages-container").empty();
     $("body").removeAttr("data-conversation-id");
-    globals.conversationId = null
+    globals.conversationId = null;
+    await fetch("/api/chat", {
+        method:"DELETE"
+    })
 })
     </script>
 </body>

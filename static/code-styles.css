@@ -14,7 +14,7 @@ Hello, Github Copilot. I want you to write a stylesheet for code.html in CSS Gri
 +++++++++++++++++++++++++#########################===============
 +++++++++++++++++++++++++#########################===============
 +++++++++++++++++++++++++#########################===============
-+++++++++++++++++++++++++#########################===============
++++++++++++++++++++++++++#########################+++++++++++++++++++++++++#########################===============
 
 Key:
 '-': Top area for a future <div> with id #top that I will add later.
@@ -45,6 +45,9 @@ Don't rely too much on !important, as that is bad practice.
   --ai-bubble: #e7f8ea;
   --accent: #4f8ef7;
   --accent-soft: rgba(79, 142, 247, 0.1);
+  --danger-bg: #fff1f2;
+  --danger-border: #fecdd3;
+  --danger-text: #9f1239;
   --radius: 1rem;
   --gap: 1.25rem;
   --panel-pad: 1.1rem;
@@ -80,11 +83,35 @@ body {
 
 #top {
   grid-area: top;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   min-height: var(--top-height);
   background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   box-shadow: var(--panel-shadow);
+  padding: 0 1rem;
+}
+
+#logout-button {
+  border: 1px solid var(--panel-border);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-strong) 100%);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  border-radius: 0.7rem;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+#logout-button:hover,
+#logout-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 18px rgba(79, 142, 247, 0.12);
+  outline: none;
 }
 
 #code {
@@ -135,6 +162,7 @@ body {
   border-radius: var(--radius);
   box-sizing: border-box;
   box-shadow: var(--panel-shadow);
+  overflow: hidden;
 }
 
 #messages-container {
@@ -143,6 +171,7 @@ body {
   flex-direction: column;
   gap: 0.75rem;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 0.25rem;
 }
 
@@ -155,6 +184,7 @@ body {
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
+  overflow-wrap: anywhere;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
@@ -209,6 +239,71 @@ body {
   transform: translateY(-1px);
   border-color: var(--accent);
   box-shadow: 0 8px 18px rgba(79, 142, 247, 0.12);
+}
+
+#new-chat-button {
+  justify-self: end;
+}
+
+#editor .ace_editor,
+#editor .ace_scroller,
+#editor .ace_content {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+#error-div {
+  grid-area: main;
+  justify-self: end;
+  align-self: center;
+  width: min(52%, 30rem);
+  max-width: calc(100% - 1.5rem);
+  margin-right: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: 0.9rem;
+  color: var(--danger-text);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.14);
+  padding: 0.85rem 0.9rem 0.9rem 1rem;
+  z-index: 10;
+}
+
+#error-div p {
+  margin: 0;
+  grid-column: 1 / -1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+#close-error-div {
+  grid-column: 2;
+  justify-self: end;
+  align-self: start;
+  border: 1px solid var(--danger-border);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--danger-text);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+#close-error-div:hover,
+#close-error-div:focus-visible {
+  background: rgba(255, 255, 255, 0.8);
+  outline: none;
 }
 
 #new-chat-button {

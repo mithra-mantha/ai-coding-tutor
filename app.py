@@ -213,6 +213,15 @@ def save_program():
     program = data.get("code")
     sql_modify("INSERT INTO programs (user_id, code) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET code = EXCLUDED.code", (current_user.id, program))
     return jsonify({"success":True})
+@app.route("/api/logout", methods=["DELETE"])
+def logout():
+    logout_user()
+    return {"redirect":True, "link":url_for("index_render")}
+
+
+
+
+
 
 @app.errorhandler(BadRequest)
 def bad_request_handler(event):

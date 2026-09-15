@@ -177,6 +177,15 @@ $("#new-chat-button").on("click", async function () {
         method:"DELETE"
     })
 })
+$("#logout-button").on("click", async function () {
+    const rawResponse = await fetch("/api/logout", {
+        method:"DELETE",
+    });
+    const response = await rawResponse.json();
+    if (response.redirect) {
+        window.location.href = response.link;
+    }
+})
     </script>
 </body>
 </html>

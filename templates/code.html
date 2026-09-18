@@ -28,7 +28,12 @@
     <div id="top"><button id="logout-button">Log out</button></div>
     <div id="code">
         <div id="editor-above">
-            <p data-loading-icon="{{url_for('static', filename='loader.gif')}}" data-saved-icon="{{url_for('static', filename='saved-icon.svg')}}" data-before-icon=""></p>
+            <p data-loading-icon="{{url_for('static', filename='loader.gif')}}" data-saved-icon="{{url_for('static', filename='saved-icon.svg')}}"></p>
+            <label for="update-html-preview-checkbox" title="Automatically update the code preview every single time you stop typing.">Update Preview Automatically: </label>
+            <input type="checkbox" id="update-html-preview-checkbox" checked>
+            <br>
+            <label for="autosave-program-checkbox" title="Automatically save your code every time you stop typing.">Save your work automatically:</label>
+            <input type="checkbox" id="autosave-program-checkbox" checked>
         </div>
         <div id="editor"></div>
         <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
@@ -60,13 +65,6 @@ let globals = {
 /* You've probably noticed something- there are two copies of the conversation id; one in JavaScript and one in HTML.
 The HTML one is only for Jinja to manipulate at the load of the page. Afterward, JavaScript handles the rest. I didn't put Jinja directly in JavaScript because then my IDE throws an error; it's not native JavaScript syntax. And my IDE's Jinja mode is nowhere near as excellent as its HTML mode.
 */
-function debounce(func, timeout) {
-    let timer;
-    return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => { func.apply(this, args)}, timeout)
-    }
-}
 let editor = ace.edit("editor");
 editor.setTheme("ace/theme/dawn");
 editor.session.setMode("ace/mode/html")
@@ -77,7 +75,14 @@ editor.setOptions({
     showPrintMargin: false,
     wrap: true,
 });
-const editorOnChange = debounce(async function () {
+function debounce(func, timeout) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func.apply(this, args)}, timeout)
+    }
+}
+function showPreview() {
     $("#error-div").hide();
     $("#error-div p").text("")
     const errorScript = `
@@ -105,7 +110,8 @@ console.log("Promise rejected- Message posted successfully!")
     const newValue = editor.getValue()
     $("#html-preview").attr("srcdoc", errorScript + "<base target='_blank'>" + newValue);
     // That way if the create a link then the <base> will redirect them to a new tab and not destroy the iframe.
-
+}
+async function saveProgram () {
     const $p = $("#editor-above p");
     $p.css("--before-image-src", `url("${$p.attr("data-loading-icon")}")`)
     $p.text("Saving...");
@@ -115,7 +121,7 @@ console.log("Promise rejected- Message posted successfully!")
             "Content-Type":"application/json"
         },
         body:JSON.stringify({
-            code:newValue,
+            code:editor.getValue(),
         }),
     });
     $p.css("--before-image-src", `url("${$p.attr("data-saved-icon")}")`)
@@ -124,6 +130,14 @@ console.log("Promise rejected- Message posted successfully!")
     editor.session.on("change", function programSavingUIDebouncer () {
         $p.css("--before-image-src", "none").text("")
     });
+}
+const editorOnChange = debounce(function () {
+    if ($("#update-html-preview-checkbox")[0].checked) {
+        showPreview();
+    }
+    if ($("#autosave-program-checkbox")[0].checked) {
+        saveProgram();
+    }
 }, 500);
 editor.session.on("change", function () {
     editorOnChange();

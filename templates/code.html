@@ -6,10 +6,30 @@
     <title>AI Coding Tutor</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/css/ace.min.css">
     <link rel="stylesheet" href="{{url_for('static', filename='code-styles.css')}}">
+    <style>
+        #editor-above p {
+            --before-image-src: none;
+        }
+        #editor-above p::before {
+            content: "";
+            background-image: var(--before-image-src);
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            vertical-align: middle;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    </style>
 </head>
 <body data-conversation-id= "{% if history %}{{ conversation_id }}{% endif %}" data-program="{% if program %}{{ program }}{% endif %}">
     <div id="top"><button id="logout-button">Log out</button></div>
     <div id="code">
+        <div id="editor-above">
+            <p data-loading-icon="{{url_for('static', filename='loader.gif')}}" data-saved-icon="{{url_for('static', filename='saved-icon.svg')}}" data-before-icon=""></p>
+        </div>
         <div id="editor"></div>
         <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
     </div>
@@ -40,6 +60,13 @@ let globals = {
 /* You've probably noticed something- there are two copies of the conversation id; one in JavaScript and one in HTML.
 The HTML one is only for Jinja to manipulate at the load of the page. Afterward, JavaScript handles the rest. I didn't put Jinja directly in JavaScript because then my IDE throws an error; it's not native JavaScript syntax. And my IDE's Jinja mode is nowhere near as excellent as its HTML mode.
 */
+function debounce(func, timeout) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func.apply(this, args)}, timeout)
+    }
+}
 let editor = ace.edit("editor");
 editor.setTheme("ace/theme/dawn");
 editor.session.setMode("ace/mode/html")
@@ -50,47 +77,56 @@ editor.setOptions({
     showPrintMargin: false,
     wrap: true,
 });
-let editorTimeoutId;
-editor.session.on("change", function (delta) {
-    clearTimeout(editorTimeoutId);
-    editorTimeoutId = setTimeout(async function () {
-        $("#error-div").hide();
-        $("#error-div p").text("")
-        const errorScript = `
+const editorOnChange = debounce(async function () {
+    $("#error-div").hide();
+    $("#error-div p").text("")
+    const errorScript = `
 <script>
 window.onerror = function (message, source, lineno, colno, error) {
-    if (message === "Script error." && lineno === 0) {
-        /* An external library did it, but we don't know what it is. */
-        window.parent.postMessage("Cross-Origin Script Error: A script loaded from an external CDN crashed, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", "*");
-    } else {
-        window.parent.postMessage(\`\${message}: at \${source}. At line \${lineno} column \${colno}.\`, "*");
-    };
-    console.log("Message posted successfully!");
+if (message === "Script error." && lineno === 0) {
+    /* An external library did it, but we don't know what it is. */
+    window.parent.postMessage("Cross-Origin Script Error: A script loaded from an external CDN crashed, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", "*");
+} else {
+    window.parent.postMessage(\`\${message}: at \${source}. At line \${lineno} column \${colno}.\`, "*");
+};
+console.log("Message posted successfully!");
 }; 
 window.onunhandledrejection = function (event) {
-    if (!event.reason || /Script error\\./i.test(event.reason)) {
-        window.parent.postMessage("Cross-Origin Script Error: A script loaded from an external CDN crashed with an unhandled rejected Promise, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", "*");
-    } else {
-        window.parent.postMessage("Unhandled promise rejection: " + event.reason, "*");
-    };
-    console.log("Promise rejected- Message posted successfully!")
+if (!event.reason || /Script error\\./i.test(event.reason)) {
+    window.parent.postMessage("Cross-Origin Script Error: A script loaded from an external CDN crashed with an unhandled rejected Promise, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", "*");
+} else {
+    window.parent.postMessage("Unhandled promise rejection: " + event.reason, "*");
+};
+console.log("Promise rejected- Message posted successfully!")
 }; 
 <\/script>
-        `.replaceAll("\n", "")
-        // This script sends all errors directly to the main script, which will then show it to the user.
-        const newValue = editor.getValue()
-        $("#html-preview").attr("srcdoc", errorScript + "<base target='_blank'>" + newValue);
-        // That way if the create a link then the <base> will redirect them to a new tab and not destroy the iframe.
-        await fetch("/api/save-program", {
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body:JSON.stringify({
-                code:newValue,
-            })
-        });
-    }, 500)
+    `.replaceAll("\n", " ")
+    // This script sends all errors directly to the main script, which will then show it to the user.
+    const newValue = editor.getValue()
+    $("#html-preview").attr("srcdoc", errorScript + "<base target='_blank'>" + newValue);
+    // That way if the create a link then the <base> will redirect them to a new tab and not destroy the iframe.
+
+    const $p = $("#editor-above p");
+    $p.css("--before-image-src", `url("${$p.attr("data-loading-icon")}")`)
+    $p.text("Saving...");
+    await fetch("/api/save-program", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            code:newValue,
+        }),
+    });
+    $p.css("--before-image-src", `url("${$p.attr("data-saved-icon")}")`)
+    $p.text("Saved!");
+    editor.session.off("change", "programSavingUIDebouncer");
+    editor.session.on("change", function programSavingUIDebouncer () {
+        $p.css("--before-image-src", "none").text("")
+    });
+}, 500);
+editor.session.on("change", function () {
+    editorOnChange();
 });
 window.addEventListener("message", function (event) {
     console.log("Received message successfully!")
@@ -167,7 +203,6 @@ $("#message-form").on("submit", async function (event) {
     } catch (error) {
         console.error(error);
     }
- 
 });
 $("#new-chat-button").on("click", async function () {
     $("#messages-container").empty();

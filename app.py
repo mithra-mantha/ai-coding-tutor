@@ -222,7 +222,6 @@ def logout():
 
 
 
-
 @app.errorhandler(BadRequest)
 def bad_request_handler(event):
     print("HTTP ERROR 400!!!")

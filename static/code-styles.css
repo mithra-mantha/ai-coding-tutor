@@ -370,3 +370,207 @@ body.chat-hidden #code {
     max-width: 92%;
   }
 }
+/* Editor controls span above both the editor and preview */
+#code {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "editor-controls editor-controls"
+    "editor preview";
+  align-items: stretch;
+}
+
+#editor-above {
+  grid-area: editor-controls;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.6rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.8rem 1rem;
+  overflow: visible;
+  background: var(--surface-soft);
+  border: 1px solid var(--panel-border);
+  border-radius: calc(var(--radius) - 0.2rem);
+  color: var(--text);
+}
+
+#editor-above p {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 1.5rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+#editor-above label {
+  justify-self: start;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+#editor-above label[for="update-html-preview-checkbox"] {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+#editor-above #update-html-preview-checkbox {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+#editor-above label[for="autosave-program-checkbox"] {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+#editor-above #autosave-program-checkbox {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+#editor-above > br {
+  display: none;
+}
+
+#editor-above input[type="checkbox"] {
+  appearance: none;
+  justify-self: end;
+  width: 2.8rem;
+  height: 1.5rem;
+  margin: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background-color: var(--surface-strong);
+  background-image: radial-gradient(
+    circle at 0.75rem 50%,
+    #ffffff 0 0.36rem,
+    transparent 0.38rem
+  );
+  background-repeat: no-repeat;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    background-position 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+#editor-above input[type="checkbox"]:checked {
+  border-color: var(--accent);
+  background-color: var(--accent);
+  background-position: 1.3rem 0;
+}
+
+#editor-above:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+#editor-above input[type="checkbox"]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+#save-program-button,
+#update-html-preview-button {
+  grid-row: 4;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+#save-program-button {
+  grid-column: 1;
+  justify-self: end;
+}
+
+#update-html-preview-button {
+  grid-column: 2;
+  justify-self: start;
+}
+
+#save-program-button:hover:not(:disabled),
+#update-html-preview-button:hover:not(:disabled),
+#save-program-button:focus-visible:not(:disabled),
+#update-html-preview-button:focus-visible:not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 6px 14px rgba(79, 142, 247, 0.12);
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
+  transform: translateY(-1px);
+}
+
+#save-program-button:disabled,
+#update-html-preview-button:disabled,
+#editor-above input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  border-color: var(--panel-border);
+  background-color: var(--surface-strong);
+  color: var(--muted);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+#editor {
+  grid-area: editor;
+  min-width: 0;
+  min-height: 0;
+}
+
+#html-preview {
+  grid-area: preview;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 980px) {
+  #code {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(20rem, 1fr) minmax(20rem, 1fr);
+    grid-template-areas:
+      "editor-controls"
+      "editor"
+      "preview";
+  }
+
+  #editor-above {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  #editor-above {
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+    padding: 0.75rem;
+  }
+
+  #save-program-button,
+  #update-html-preview-button {
+    width: auto;
+  }
+}

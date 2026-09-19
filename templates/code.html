@@ -28,12 +28,13 @@
     <div id="top"><button id="logout-button">Log out</button></div>
     <div id="code">
         <div id="editor-above">
-            <p data-loading-icon="{{url_for('static', filename='loader.gif')}}" data-saved-icon="{{url_for('static', filename='saved-icon.svg')}}"></p>
-            <label for="update-html-preview-checkbox" title="Automatically update the code preview every single time you stop typing.">Update Preview Automatically: </label>
-            <input type="checkbox" id="update-html-preview-checkbox" checked>
-            <br>
-            <label for="autosave-program-checkbox" title="Automatically save your code every time you stop typing.">Save your work automatically:</label>
-            <input type="checkbox" id="autosave-program-checkbox" checked>
+<p data-loading-icon="{{url_for('static', filename='loader.gif')}}" data-saved-icon="{{url_for('static', filename='saved-icon.svg')}}"></p>
+<label for="update-html-preview-checkbox" title="Automatically update the code preview every single time you stop typing.">Update Preview Automatically: </label>
+<input type="checkbox" id="update-html-preview-checkbox" checked>
+<label for="autosave-program-checkbox" title="Automatically save your code every time you stop typing.">Autosave your work:</label>
+<input type="checkbox" id="autosave-program-checkbox" checked>
+<button id="save-program-button" disabled>Save</button>
+<button id="update-html-preview-button" disabled>Update HTML</button>
         </div>
         <div id="editor"></div>
         <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
@@ -48,7 +49,7 @@
         </div>
         <button id="new-chat-button">Create New Chat</button>
         <form id="message-form">
-            <textarea id="message-input" aria-label="Ask your question here..." placeholder="Type your prompt here..." rows="3"></textarea><br>
+            <textarea id="message-input" aria-label="Ask your question here..." placeholder="Type your prompt here..." rows="3" required aria-></textarea><br>
             <button type="submit">Send</button>
         </form>
     </div>
@@ -142,6 +143,32 @@ const editorOnChange = debounce(function () {
 editor.session.on("change", function () {
     editorOnChange();
 });
+/*
+Normally, when a keyboard user tabs inside the ace editor, they can't get out! Ace treats it like they're just adding an indent. That's why this keyboard shortcut exists.
+*/
+editor.commands.addCommand({
+    name:"escapeEditor",
+    bindKey:{"win":"Esc", "mac":"Esc"},
+    exec:function () {
+        $("#html-preview")[0].focus();
+    }
+});
+$("#autosave-program-checkbox").on("change", function () {
+    if (this.checked) {
+        $("#save-program-button").prop("disabled", true);
+    } else {
+        $("#save-program-button").prop("disabled", false);
+    }
+});
+$("#update-html-preview-checkbox").on("change", function () {
+    if (this.checked) {
+        $("#update-html-preview-button").prop("disabled", true);
+    } else {
+        $("#update-html-preview-button").prop("disabled", false);
+    }
+});
+$("#save-program-button").on("click", saveProgram);
+$("#update-html-preview-button").on("click", showPreview);
 window.addEventListener("message", function (event) {
     console.log("Received message successfully!")
     if (event.source !== $("#html-preview")[0].contentWindow) {

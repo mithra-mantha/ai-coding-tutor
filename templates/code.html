@@ -37,7 +37,9 @@
 <button id="update-html-preview-button" disabled>Update HTML</button>
         </div>
         <div id="editor"></div>
-        <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
+        <div id="html-preview-container">
+            <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
+        </div>
     </div>
     <div id="chat">
         <div id="messages-container">
@@ -111,6 +113,14 @@ console.log("Promise rejected- Message posted successfully!")
     const newValue = editor.getValue()
     $("#html-preview").attr("srcdoc", errorScript + "<base target='_blank'>" + newValue);
     // That way if the create a link then the <base> will redirect them to a new tab and not destroy the iframe.
+    const previewTimeoutId = setTimeout(() => {
+        $("#html-preview-container").append($("#html-preview").remove().attr("srcdoc", ""));
+        $("#error-div p").text("Your code took too much time, so we halted it. That's all we know.");
+        $("#error-div").show();
+    }, 5000)
+    $("#html-preview")[0].onload = function () {
+        clearTimeout(previewTimeoutId);
+    }
 }
 async function saveProgram () {
     const $p = $("#editor-above p");
@@ -181,6 +191,7 @@ window.addEventListener("message", function (event) {
 });
 $("#close-error-div").on("click", function () {
     $("#error-div").hide();
+    $("#error-div p").text("")
 });
 editor.setValue($("body").attr("data-program"));
 $("body").attr("data-program", "")

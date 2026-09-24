@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        #result {
+            width: 100%;
+            height: 100%;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .python-error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="result"></div>
+    <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
+    <script>
+(async () => {
+    window.pyodide = await loadPyodide({
+        stdout:(text) => {
+            $("#result").append($("<span class='python-output'></span><br>").text(text))
+        },
+    });
+    pyodide.setStderr({
+        batched:onPythonError
+    });
+})();
+function onPythonError(error) {
+    $("#result").append($("<span class='python-error'></span><br>").text(error))
+}
+$("#input-textarea").on("keydown", function (event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        $("#input-form").trigger("submit")
+    }
+});
+window.addEventListener("message", function (event) {
+    $("#result").empty();
+    const pythonCode = event.data;
+    pyodide.runPython(`
+import builtins as ____builtins____
+# Redefine the input() function
+def input(text=''):
+    import js
+    return js.prompt(text)
+____builtins____.input = input # Override even the builtins input!
+# Override all globals that existed last time
+for name in list(globals().keys()):
+    if not name.startswith("_"):
+        del globals()[name]
+del name
+`);
+    try {
+        pyodide.runPython(pythonCode)
+    } catch (error) {
+        if (error.name === "PythonError") {
+            onPythonError(error.message)
+        } else {
+            throw error;
+        }
+    }
+});
+    </script>
+</body>
+
+</html>

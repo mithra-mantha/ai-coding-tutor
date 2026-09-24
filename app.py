@@ -77,6 +77,9 @@ def login_render():
 @app.route("/register")
 def register_render():
     return render_template("login.html", mode="register")
+@app.route("/iframes/python-runner")
+def python_runner_render():
+    return render_template("python-runner.html")
 
 @app.route("/api/chat", methods=["POST"])
 def create_chat():

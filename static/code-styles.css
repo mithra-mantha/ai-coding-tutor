@@ -20,7 +20,7 @@ Key:
 '-': Top area for a future <div> with id #top that I will add later.
 '=': The #chat div.
 '+': The #editor div
-'#': The #html-preview iframe.
+'#': The .result-container iframe.
 
 Make sure to have lots of breathing room. Also, it should fit to most screen layouts(although this is not a priority) and be readable(again, this is not a priority).
 
@@ -28,6 +28,10 @@ If the #chat div is hidden via display none, the rest of the parts should resize
 
 Don't rely too much on !important, as that is bad practice.
 */
+
+.python-stuff {
+  display: none;
+}
 
 :root {
   --page-bg: #f3f6fb;
@@ -131,7 +135,8 @@ body {
 }
 
 #editor,
-#html-preview {
+#html-preview-container,
+#python-result-container {
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -145,7 +150,17 @@ body {
   background: var(--editor-bg);
 }
 
-#html-preview {
+#html-preview-container,
+#python-result-container {
+  background: var(--preview-bg);
+}
+
+#html-preview,
+#python-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
   background: var(--preview-bg);
 }
 
@@ -384,7 +399,7 @@ body.chat-hidden #code {
   grid-area: editor-controls;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto auto auto;
+  grid-template-rows: auto auto auto auto auto;
   align-items: center;
   column-gap: 0.75rem;
   row-gap: 0.6rem;
@@ -437,6 +452,24 @@ body.chat-hidden #code {
   grid-row: 3;
 }
 
+#editor-above label[for="language-selection"] {
+  grid-column: 1;
+  grid-row: 5;
+}
+
+#editor-above #language-selection {
+  grid-column: 2;
+  grid-row: 5;
+  justify-self: end;
+  min-width: 10rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
 #editor-above > br {
   display: none;
 }
@@ -481,7 +514,8 @@ body.chat-hidden #code {
 }
 
 #save-program-button,
-#update-html-preview-button {
+#update-html-preview-button,
+#run-python-button {
   grid-row: 4;
   flex: 0 0 auto;
   margin: 0;
@@ -510,10 +544,17 @@ body.chat-hidden #code {
   justify-self: start;
 }
 
+#run-python-button {
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+
 #save-program-button:hover:not(:disabled),
 #update-html-preview-button:hover:not(:disabled),
+#run-python-button:hover:not(:disabled),
 #save-program-button:focus-visible:not(:disabled),
-#update-html-preview-button:focus-visible:not(:disabled) {
+#update-html-preview-button:focus-visible:not(:disabled),
+#run-python-button:focus-visible:not(:disabled) {
   border-color: var(--accent);
   box-shadow: 0 6px 14px rgba(79, 142, 247, 0.12);
   outline: 3px solid var(--accent-soft);
@@ -523,6 +564,7 @@ body.chat-hidden #code {
 
 #save-program-button:disabled,
 #update-html-preview-button:disabled,
+#run-python-button:disabled,
 #editor-above input[type="checkbox"]:disabled {
   opacity: 0.5;
   border-color: var(--panel-border);
@@ -539,7 +581,8 @@ body.chat-hidden #code {
   min-height: 0;
 }
 
-#html-preview {
+#html-preview-container,
+#python-result-container {
   grid-area: preview;
   min-width: 0;
   min-height: 0;

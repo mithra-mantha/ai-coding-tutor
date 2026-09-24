@@ -28,17 +28,26 @@
     <div id="top"><button id="logout-button">Log out</button></div>
     <div id="code">
         <div id="editor-above">
-<p data-loading-icon="{{url_for('static', filename='loader.gif')}}" data-saved-icon="{{url_for('static', filename='saved-icon.svg')}}"></p>
-<label for="update-html-preview-checkbox" title="Automatically update the code preview every single time you stop typing.">Update Preview Automatically: </label>
-<input type="checkbox" id="update-html-preview-checkbox" checked>
-<label for="autosave-program-checkbox" title="Automatically save your code every time you stop typing.">Autosave your work:</label>
-<input type="checkbox" id="autosave-program-checkbox" checked>
-<button id="save-program-button" disabled>Save</button>
-<button id="update-html-preview-button" disabled>Update HTML</button>
+            <p data-loading-icon="{{url_for('static', filename='loader.gif')}}" data-saved-icon="{{url_for('static', filename='saved-icon.svg')}}"></p>
+            <label for="update-html-preview-checkbox" title="Automatically update the code preview every single time you stop typing." class="html-stuff">Update Preview Automatically: </label>
+            <input type="checkbox" id="update-html-preview-checkbox" class="html-stuff" checked>
+            <label for="autosave-program-checkbox" title="Automatically save your code every time you stop typing.">Autosave your work:</label>
+            <input type="checkbox" id="autosave-program-checkbox" checked>
+            <button id="save-program-button" disabled>Save</button>
+            <button id="update-html-preview-button" disabled class="html-stuff">Update HTML</button>
+            <button id="run-python-button" class="python-stuff">Run</button>
+            <label for="language-selection">Select language: </label>
+            <select id="language-selection">
+                <option value="python">Python</option>
+                <option value="html" selected>HTML/CSS/JavaScript</option>
+            </select>
         </div>
         <div id="editor"></div>
-        <div id="html-preview-container">
+        <div id="html-preview-container" class="code-result html-stuff">
             <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
+        </div>
+        <div id="python-result-container" class="code-result python-stuff">
+            <iframe src="{{ url_for('python_runner_render') }}" frameborder="0" id="python-preview" sandbox="allow-scripts allow-modals"></iframe>
         </div>
     </div>
     <div id="chat">
@@ -68,16 +77,32 @@ let globals = {
 /* You've probably noticed something- there are two copies of the conversation id; one in JavaScript and one in HTML.
 The HTML one is only for Jinja to manipulate at the load of the page. Afterward, JavaScript handles the rest. I didn't put Jinja directly in JavaScript because then my IDE throws an error; it's not native JavaScript syntax. And my IDE's Jinja mode is nowhere near as excellent as its HTML mode.
 */
-let editor = ace.edit("editor");
+const editor = ace.edit("editor");
+const pySession = ace.createEditSession("", "ace/mode/python")
+pySession.setOptions({
+    tabSize: 4,
+    useSoftTabs: true,
+    wrap: true,
+    indentedSoftWrap: true,
+});
+const htmlSession = ace.createEditSession("", "ace/mode/html")
+htmlSession.setOptions({
+    tabSize: 4,
+    useSoftTabs: true,
+    wrap: true,
+    indentedSoftWrap: true,
+});
+editor.setSession(htmlSession);
 editor.setTheme("ace/theme/dawn");
-editor.session.setMode("ace/mode/html")
-editor.resize();
 editor.setOptions({
     fontSize: "16px",
     fontFamily: "Courier New, Courier, monospace",
     showPrintMargin: false,
     wrap: true,
+    useSoftTabs: true,
 });
+editor.resize();
+
 function debounce(func, timeout) {
     let timer;
     return (...args) => {
@@ -152,6 +177,21 @@ const editorOnChange = debounce(function () {
 }, 500);
 editor.session.on("change", function () {
     editorOnChange();
+});
+$("#language-selection").on("change", function (event) {
+    const newVal = $(event.target).val();
+    if (newVal === "python") {
+        editor.setSession(pySession);
+        $(".html-stuff").hide();
+        $(".python-stuff").show();
+    } else if (newVal === "html") {
+        editor.setSession(htmlSession);
+        $(".python-stuff").hide();
+        $(".html-stuff").show();
+    }
+});
+$("#run-python-button").on("click", function () {
+    $("#python-preview")[0].contentWindow.postMessage(editor.getValue(), "*")
 });
 /*
 Normally, when a keyboard user tabs inside the ace editor, they can't get out! Ace treats it like they're just adding an indent. That's why this keyboard shortcut exists.
@@ -272,7 +312,7 @@ $("#logout-button").on("click", async function () {
     if (response.redirect) {
         window.location.href = response.link;
     }
-})
+});
     </script>
 </body>
 </html>

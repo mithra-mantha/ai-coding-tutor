@@ -39,7 +39,7 @@ $("#input-textarea").on("keydown", function (event) {
         $("#input-form").trigger("submit")
     }
 });
-window.addEventListener("message", function (event) {
+window.addEventListener("message", async function (event) {
     $("#result").empty();
     const pythonCode = event.data;
     pyodide.runPython(`
@@ -56,13 +56,15 @@ for name in list(globals().keys()):
 del name
 `);
     try {
-        pyodide.runPython(pythonCode)
+        await pyodide.runPythonAsync(pythonCode)
     } catch (error) {
         if (error.name === "PythonError") {
             onPythonError(error.message)
         } else {
             throw error;
         }
+    } finally {
+        window.parent.postMessage({reason:"RAN_PYTHON_CODE"}, "*")
     }
 });
     </script>

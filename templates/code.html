@@ -22,6 +22,21 @@
             background-repeat: no-repeat;
             background-position: center;
         }
+        #run-python-button {
+            --before-image-src: var(--play-button-image);
+        }
+        #run-python-button::before {
+            content: "";
+            background-image: var(--before-image-src);
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            vertical-align: middle;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
     </style>
 </head>
 <body data-conversation-id= "{% if history %}{{ conversation_id }}{% endif %}" data-program="{% if program %}{{ program }}{% endif %}">
@@ -102,7 +117,16 @@ editor.setOptions({
     useSoftTabs: true,
 });
 editor.resize();
-
+/*
+Normally, when a keyboard user tabs inside the ace editor, they can't get out! Ace treats it like they're just adding an indent. That's why this keyboard shortcut exists.
+*/
+editor.commands.addCommand({
+    name:"escapeEditor",
+    bindKey:{"win":"Esc", "mac":"Esc"},
+    exec:function () {
+        $("#html-preview")[0].focus();
+    }
+});
 function debounce(func, timeout) {
     let timer;
     return (...args) => {
@@ -118,19 +142,19 @@ function showPreview() {
 window.onerror = function (message, source, lineno, colno, error) {
 if (message === "Script error." && lineno === 0) {
     /* An external library did it, but we don't know what it is. */
-    window.parent.postMessage("Cross-Origin Script Error: A script loaded from an external CDN crashed, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", "*");
+    window.parent.postMessage({'message':"Cross-Origin Script Error: A script loaded from an external CDN crashed, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", 'reason':"JS_ERROR_MESSAGE"}, "*");
 } else {
-    window.parent.postMessage(\`\${message}: at \${source}. At line \${lineno} column \${colno}.\`, "*");
+    window.parent.postMessage({'message':\`\${message}: at \${source}. At line \${lineno} column \${colno}.\`, 'reason':"JS_ERROR_MESSAGE"}, "*");
 };
 console.log("Message posted successfully!");
 }; 
 window.onunhandledrejection = function (event) {
 if (!event.reason || /Script error\\./i.test(event.reason)) {
-    window.parent.postMessage("Cross-Origin Script Error: A script loaded from an external CDN crashed with an unhandled rejected Promise, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", "*");
+    window.parent.postMessage({'message':"Cross-Origin Script Error: A script loaded from an external CDN crashed with an unhandled rejected Promise, but the error details are hidden for security reasons. To show the error, add 'crossorigin=\\"anonymous\\"' to your <script> tag.", 'reason':"JS_ERROR_MESSAGE"}, "*");
 } else {
-    window.parent.postMessage("Unhandled promise rejection: " + event.reason, "*");
+    window.parent.postMessage({'message':"Unhandled promise rejection: " + event.reason, 'reason':"JS_ERROR_MESSAGE"}, "*");
 };
-console.log("Promise rejected- Message posted successfully!")
+console.log("Promise rejected- Message posted successfully!");
 }; 
 <\/script>
     `.replaceAll("\n", " ")
@@ -196,13 +220,7 @@ $("#run-python-button").on("click", function () {
 /*
 Normally, when a keyboard user tabs inside the ace editor, they can't get out! Ace treats it like they're just adding an indent. That's why this keyboard shortcut exists.
 */
-editor.commands.addCommand({
-    name:"escapeEditor",
-    bindKey:{"win":"Esc", "mac":"Esc"},
-    exec:function () {
-        $("#html-preview")[0].focus();
-    }
-});
+
 $("#autosave-program-checkbox").on("change", function () {
     if (this.checked) {
         $("#save-program-button").prop("disabled", true);
@@ -221,11 +239,14 @@ $("#save-program-button").on("click", saveProgram);
 $("#update-html-preview-button").on("click", showPreview);
 window.addEventListener("message", function (event) {
     console.log("Received message successfully!")
+    if (event.reason === "JS_ERROR_MESSAGE") {
+        return;
+    }
     if (event.source !== $("#html-preview")[0].contentWindow) {
         console.warn("Received suspicious message from an iframe that doesn't match. Information: ", event);
         return;
     }
-    const errorMessage = event.data;
+    const errorMessage = event.data.message;
     $("#error-div p").text(errorMessage);
     $("#error-div").show();
 });

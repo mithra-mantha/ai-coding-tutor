@@ -39,7 +39,7 @@
         }
     </style>
 </head>
-<body data-conversation-id= "{% if history %}{{ conversation_id }}{% endif %}" data-program="{% if program %}{{ program }}{% endif %}">
+<body data-conversation-id= "{% if history %}{{ conversation_id }}{% endif %}" data-html-program="{% if html_program %}{{ html_program }}{% endif %}" data-python-program="{% if python_program %}{{ python_program }}{% endif %}">
     <div id="top"><button id="logout-button">Log out</button></div>
     <div id="code">
         <div id="editor-above">
@@ -88,6 +88,7 @@ let globals = {
     conversationId:
     $("body").attr("data-conversation-id").trim() ? $("body").attr("data-conversation-id").trim() : null
     ,
+    currentLanguage: "html",
 };
 /* You've probably noticed something- there are two copies of the conversation id; one in JavaScript and one in HTML.
 The HTML one is only for Jinja to manipulate at the load of the page. Afterward, JavaScript handles the rest. I didn't put Jinja directly in JavaScript because then my IDE throws an error; it's not native JavaScript syntax. And my IDE's Jinja mode is nowhere near as excellent as its HTML mode.
@@ -107,6 +108,8 @@ htmlSession.setOptions({
     wrap: true,
     indentedSoftWrap: true,
 });
+htmlSession.setValue($("body").attr("data-html-program"));
+pySession.setValue($("body").attr("data-python-program"));
 editor.setSession(htmlSession);
 editor.setTheme("ace/theme/dawn");
 editor.setOptions({
@@ -182,6 +185,7 @@ async function saveProgram () {
         },
         body:JSON.stringify({
             code:editor.getValue(),
+            language:globals.currentLanguage,
         }),
     });
     $p.css("--before-image-src", `url("${$p.attr("data-saved-icon")}")`)
@@ -192,26 +196,27 @@ async function saveProgram () {
     });
 }
 const editorOnChange = debounce(function () {
-    if ($("#update-html-preview-checkbox")[0].checked) {
+    if ($("#update-html-preview-checkbox")[0].checked && globals.currentLanguage === "html") {
         showPreview();
     }
     if ($("#autosave-program-checkbox")[0].checked) {
         saveProgram();
     }
 }, 500);
-editor.session.on("change", function () {
-    editorOnChange();
-});
+pySession.on("change", editorOnChange);
+htmlSession.on("change", editorOnChange);
 $("#language-selection").on("change", function (event) {
     const newVal = $(event.target).val();
     if (newVal === "python") {
         editor.setSession(pySession);
         $(".html-stuff").hide();
         $(".python-stuff").show();
+        globals.currentLanguage = "python"
     } else if (newVal === "html") {
         editor.setSession(htmlSession);
         $(".python-stuff").hide();
         $(".html-stuff").show();
+        globals.currentLanguage = "html"
     }
 });
 $("#run-python-button").on("click", function () {
@@ -254,8 +259,6 @@ $("#close-error-div").on("click", function () {
     $("#error-div").hide();
     $("#error-div p").text("")
 });
-editor.setValue($("body").attr("data-program"));
-$("body").attr("data-program", "")
 function addMessageToChat(message, isFromHuman) {
     const newEl = $(`
 <div class="message ${isFromHuman ? 'user-message' : 'ai-message'}"></div>
@@ -334,6 +337,7 @@ $("#logout-button").on("click", async function () {
         window.location.href = response.link;
     }
 });
+showPreview();
     </script>
 </body>
 </html>

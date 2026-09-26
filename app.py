@@ -67,10 +67,13 @@ def index_render():
 @login_required
 def code_render():
     conversation = get_conversation()
-    program = sql_query("SELECT code FROM programs WHERE user_id = ?", (current_user.id,))[0][0]
-    if not program:
-        program = ""
-    return render_template("code.html", history=conversation[0], conversation_id=conversation[1], Markdown=MarkdownIt, program=program)
+    python_program = sql_query("SELECT code FROM python_programs WHERE user_id = ?", (current_user.id,)) or ""
+    html_program = sql_query("SELECT code FROM html_programs WHERE user_id = ?", (current_user.id,)) or ""
+    if html_program:
+        html_program = html_program[0][0]
+    if python_program:
+        python_program = python_program[0][0]
+    return render_template("code.html", history=conversation[0], conversation_id=conversation[1], Markdown=MarkdownIt, python_program=python_program, html_program=html_program)
 @app.route("/login")
 def login_render():
     return render_template("login.html", mode="login")
@@ -214,13 +217,13 @@ def register_check_code():
 def save_program():
     data = request.get_json()
     program = data.get("code")
-    sql_modify("INSERT INTO programs (user_id, code) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET code = EXCLUDED.code", (current_user.id, program))
+    language = data.get("language")
+    sql_modify(f"INSERT INTO {language}_programs (user_id, code) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET code = EXCLUDED.code", (current_user.id, program))
     return jsonify({"success":True})
 @app.route("/api/logout", methods=["DELETE"])
 def logout():
     logout_user()
     return {"redirect":True, "link":url_for("index_render")}
-
 
 
 
@@ -253,6 +256,7 @@ def sql_modify(query, placeholders=None):
 sql_modify("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, email TEXT UNIQUE);")
 sql_modify("CREATE TABLE IF NOT EXISTS codes (id INTEGER PRIMARY KEY, email TEXT UNIQUE, hashed_code TEXT);")
 sql_modify("CREATE TABLE IF NOT EXISTS conversations (id INTEGER PRIMARY KEY, user_id INTEGER UNIQUE, conversation_id TEXT);")
-sql_modify("CREATE TABLE IF NOT EXISTS programs (id INTEGER PRIMARY KEY, user_id INTEGER UNIQUE, code TEXT);")
+sql_modify("CREATE TABLE IF NOT EXISTS html_programs (id INTEGER PRIMARY KEY, user_id INTEGER UNIQUE, code TEXT);")
+sql_modify("CREATE TABLE IF NOT EXISTS python_programs (id INTEGER PRIMARY KEY, user_id INTEGER UNIQUE, code TEXT);")
 if __name__ == "__main__":
     app.run(debug=True)

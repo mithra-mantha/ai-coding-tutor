@@ -56,10 +56,14 @@ for name in list(globals().keys()):
 del name
 `);
     try {
-        await pyodide.runPythonAsync(pythonCode)
+        pyodide.FS.writeFile("/main.py", pythonCode, {encoding:"utf8",})
+        await pyodide.runPythonAsync(`
+import runpy
+runpy.run_path('/main.py', run_name='__main__')
+`)
     } catch (error) {
         if (error.name === "PythonError") {
-            onPythonError(error.message)
+            onPythonError('Traceback: (most recent call last)\n File "main.py" ' + error.message.split(/\sFile \"\/main\.py\"\s/i).slice(1).join(   'File "main.py"'))
         } else {
             throw error;
         }

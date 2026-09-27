@@ -299,7 +299,7 @@ $("#message-form").on("submit", async function (event) {
             headers:{
                 "Content-Type":"application/json"
             },
-            body:JSON.stringify({message:value, code:editor.getValue(), id:globals.conversationId}),
+            body:JSON.stringify({message:value, code:editor.getValue(), id:globals.conversationId, language:globals.currentLanguage}),
         });
         if (!rawResponse.ok) {
             throw new Error(`HTTP Error! Status: ${rawResponse.status}.`);

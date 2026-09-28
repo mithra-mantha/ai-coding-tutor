@@ -37,6 +37,18 @@
             background-repeat: no-repeat;
             background-position: center;
         }
+        #python-module-container {
+            overflow-x: auto;
+            .python-module {
+                display: inline-block;
+                cursor: pointer;
+                border: 3px solid black;
+                padding: 3px;
+            }
+            .selected-python-module {
+                background-color: rgb(182, 182, 182);
+            }
+        }
     </style>
 </head>
 <body data-conversation-id= "{% if history %}{{ conversation_id }}{% endif %}" data-html-program="{% if html_program %}{{ html_program }}{% endif %}" data-python-program="{% if python_program %}{{ python_program }}{% endif %}">
@@ -57,6 +69,19 @@
                 <option value="html" selected>HTML/CSS/JavaScript</option>
             </select>
         </div>
+        <div id="python-module-container" class="python-stuff">
+            <span class="python-module" id="main-python-module">main.py</span>
+        </div>
+        <button id="create-python-module-button" title="Create a new Python module." class="python-stuff">&#43;</button>
+        <dialog id="create-python-module-dialog">
+            <button onclick="this.parentElement.close()">&#10005;</button>
+            <form>
+                <label>Enter the name of the new module. It must contain only letters, numbers, and the symbols '_' and '-'.
+                    <input type="text" pattern="[a-zA-Z0-9_\-]+" title="Only alphanumeric symbols, '_', and '-' are allowed." required>.py
+                </label>
+                <button type="submit">Create</button>
+            </form>
+        </dialog>
         <div id="editor"></div>
         <div id="html-preview-container" class="code-result html-stuff">
             <iframe frameborder="0" id="html-preview" srcdoc="" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
@@ -89,13 +114,14 @@ let globals = {
     $("body").attr("data-conversation-id").trim() ? $("body").attr("data-conversation-id").trim() : null
     ,
     currentLanguage: "html",
+    pythonSessions:{},
 };
 /* You've probably noticed something- there are two copies of the conversation id; one in JavaScript and one in HTML.
 The HTML one is only for Jinja to manipulate at the load of the page. Afterward, JavaScript handles the rest. I didn't put Jinja directly in JavaScript because then my IDE throws an error; it's not native JavaScript syntax. And my IDE's Jinja mode is nowhere near as excellent as its HTML mode.
 */
 const editor = ace.edit("editor");
-const pySession = ace.createEditSession("", "ace/mode/python")
-pySession.setOptions({
+const mainPySession = ace.createEditSession("", "ace/mode/python")
+mainPySession.setOptions({
     tabSize: 4,
     useSoftTabs: true,
     wrap: true,
@@ -109,7 +135,7 @@ htmlSession.setOptions({
     indentedSoftWrap: true,
 });
 htmlSession.setValue($("body").attr("data-html-program"));
-pySession.setValue($("body").attr("data-python-program"));
+mainPySession.setValue($("body").attr("data-python-program"));
 editor.setSession(htmlSession);
 editor.setTheme("ace/theme/dawn");
 editor.setOptions({
@@ -120,6 +146,7 @@ editor.setOptions({
     useSoftTabs: true,
 });
 editor.resize();
+globals.pythonSessions["main"] = mainPySession;
 /*
 Normally, when a keyboard user tabs inside the ace editor, they can't get out! Ace treats it like they're just adding an indent. That's why this keyboard shortcut exists.
 */
@@ -203,12 +230,12 @@ const editorOnChange = debounce(function () {
         saveProgram();
     }
 }, 500);
-pySession.on("change", editorOnChange);
+mainPySession.on("change", editorOnChange);
 htmlSession.on("change", editorOnChange);
 $("#language-selection").on("change", function (event) {
     const newVal = $(event.target).val();
     if (newVal === "python") {
-        editor.setSession(pySession);
+        editor.setSession(mainPySession);
         $(".html-stuff").hide();
         $(".python-stuff").show();
         globals.currentLanguage = "python"
@@ -222,10 +249,40 @@ $("#language-selection").on("change", function (event) {
 $("#run-python-button").on("click", function () {
     $("#python-preview")[0].contentWindow.postMessage(editor.getValue(), "*")
 });
-/*
-Normally, when a keyboard user tabs inside the ace editor, they can't get out! Ace treats it like they're just adding an indent. That's why this keyboard shortcut exists.
-*/
-
+$("#create-python-module-button").on("click", function () {
+    $("#create-python-module-dialog")[0].showModal();
+});
+$("#create-python-module-dialog form").on("submit", function () {
+    event.preventDefault();
+    const moduleName = $("#create-python-module-dialog form input").val();
+    if (/[^a-zA-Z0-9_\-]/i.test(moduleName)) {
+        alert("Please only include alphanumeric characters, '_', and '-' in your module names.");
+        return;
+    } else if (!moduleName) {
+        alert("Please submit a module name.");
+        return;
+    }
+    globals.pythonSessions[moduleName] = ace.createEditSession("", "ace/mode/python");
+    $("#create-python-module-dialog form input").val("");
+    $("#python-module-container").append($("<span class='python-module'></span>").text(moduleName + ".py"));
+    $("#create-python-module-dialog")[0].close();
+});
+$("#python-module-container").on("click", function (event) {
+    if ($("#python-module-container").children().length <= 1) {
+        return;
+    }
+    const $module = $(event.target);
+    const session = globals.pythonSessions[$module.text().split(".py")[0]];
+    if (session == undefined) {
+        console.warn("Session from python module not found!", $module, $module.text());
+        return;
+    }
+    $("#python-module-container").children().each((index, element) => {
+        $(element).removeClass("selected-python-module")
+    });
+    $module.addClass("selected-python-module")
+    editor.setSession(session);
+})
 $("#autosave-program-checkbox").on("change", function () {
     if (this.checked) {
         $("#save-program-button").prop("disabled", true);

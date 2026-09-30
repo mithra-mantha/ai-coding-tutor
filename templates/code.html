@@ -247,7 +247,11 @@ $("#language-selection").on("change", function (event) {
     }
 });
 $("#run-python-button").on("click", function () {
-    $("#python-preview")[0].contentWindow.postMessage(editor.getValue(), "*")
+    const values = {};
+    for (const sessionName in globals.pythonSessions) {
+        values[sessionName + ".py"] = globals.pythonSessions[sessionName].getValue();
+    }
+    $("#python-preview")[0].contentWindow.postMessage(values, "*");
 });
 $("#create-python-module-button").on("click", function () {
     $("#create-python-module-dialog")[0].showModal();

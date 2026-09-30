@@ -16,7 +16,7 @@
 </head>
 
 <body>
-    <div id="result"></div>
+    <pre><div id="result"></div></pre>
     <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
     <script>
@@ -41,29 +41,52 @@ $("#input-textarea").on("keydown", function (event) {
 });
 window.addEventListener("message", async function (event) {
     $("#result").empty();
-    const pythonCode = event.data;
-    pyodide.runPython(`
-import builtins as ____builtins____
+    const pythonModules = event.data;
+    const newInputFunc = `
 # Redefine the input() function
 def input(text=''):
     import js
-    return js.prompt(text)
-____builtins____.input = input # Override even the builtins input!
-# Override all globals that existed last time
-for name in list(globals().keys()):
-    if not name.startswith("_"):
-        del globals()[name]
-del name
+    from pyodide.ffi import jsnull
+    result = js.prompt(text)
+    if result is jsnull:
+        return ""
+    return result
+
+`
+    const numNewlines = newInputFunc.match(/\n/g || []).length;
+    for (const moduleName in pythonModules) {
+        const moduleCode = pythonModules[moduleName];
+        pyodide.FS.writeFile("/" + moduleName, newInputFunc + moduleCode, {encoding:"utf8"})
+    }
+    pyodide.runPython(`
+import sys
+if "/" not in sys.path:
+    sys.path.append("/")
 `);
     try {
-        pyodide.FS.writeFile("/main.py", pythonCode, {encoding:"utf8",})
         await pyodide.runPythonAsync(`
 import runpy
-runpy.run_path('/main.py', run_name='__main__')
+runpy.run_path('/main.py', run_name='__main__', init_globals={"input":input})
 `)
     } catch (error) {
         if (error.name === "PythonError") {
-            onPythonError('Traceback: (most recent call last)\n File "main.py" ' + error.message.split(/\sFile \"\/main\.py\"\s/i).slice(1).join(   'File "main.py"'))
+            console.log(error.message)
+            let formattedStr = 'Traceback: (most recent call last)\n File "main.py" ' + error.message.split(/File \"\/?main\.py\"/i).slice(1).join('\nFile "main.py"');
+            /*
+            We injected the input() function earlier into the python so that pyodide would cooperate- the only problem is that in case of an error, it messes up the line numbers.
+            */
+            const splitStrWithLineNums = formattedStr.split(/(?<=File \"\/?[\w\-]+\.py\"\s?,? line )(?=[0-9]+)/);
+            const splitStr = formattedStr.split(/(?<=File \"\/?[\w\-]+\.py\"\s?,? line )[0-9]+/);
+            console.log(splitStr, splitStrWithLineNums)
+
+            let newStr = splitStr[0];
+            for (let i = 1; i < splitStr.length; i++) {
+                // Start at the 1 index so we can replace it.
+                const lineNumber = parseInt(splitStrWithLineNums[i]);
+                newStr = newStr + (lineNumber - numNewlines).toString() + splitStr[i];
+            }
+            formattedStr = newStr;
+            onPythonError(formattedStr);
         } else {
             throw error;
         }

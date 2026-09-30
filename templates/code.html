@@ -267,8 +267,9 @@ $("#create-python-module-dialog form").on("submit", function () {
         return;
     }
     globals.pythonSessions[moduleName] = ace.createEditSession("", "ace/mode/python");
+    editor.setSession(globals.pythonSessions[moduleName])
     $("#create-python-module-dialog form input").val("");
-    $("#python-module-container").append($("<span class='python-module'></span>").text(moduleName + ".py"));
+    $("#python-module-container").append($("<span class='python-module'></span>").text(moduleName + ".py").addClass("selected-python-module"));
     $("#create-python-module-dialog")[0].close();
 });
 $("#python-module-container").on("click", function (event) {

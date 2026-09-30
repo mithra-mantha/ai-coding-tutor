@@ -26,9 +26,6 @@
             $("#result").append($("<div class='python-output'></div>").text(text))
         },
     });
-    pyodide.setStderr({
-        batched:onPythonError
-    });
 })();
 function onPythonError(error) {
     $("#result").append($("<div class='python-error'></div>").text(error))
@@ -60,13 +57,33 @@ def input(text=''):
     }
     pyodide.runPython(`
 import sys
+import json
+import os
+import shutil
+import importlib
+import js
+print = js.console.log
 if "/" not in sys.path:
     sys.path.append("/")
+# Clear any cached modules
+mods_list = json.loads('${JSON.stringify(Object.keys(pythonModules).map((value) => value.replace(/\.py$/, "")))}')
+print(json.dumps(mods_list))
+for name in list(sys.modules.keys()):
+    name = name.split(".")[0]
+    print(name)
+    if name in mods_list:
+        del sys.modules[name]
+# Nuke the __pycache__ folder.
+if os.path.exists("/__pycache__"):
+    print("Nuking __pycache__")
+    shutil.rmtree("/__pycache__")
+sys.path_importer_cache.clear()
+importlib.invalidate_caches()
 `);
     try {
         await pyodide.runPythonAsync(`
 import runpy
-runpy.run_path('/main.py', run_name='__main__', init_globals={"input":input})
+runpy.run_path('/main.py', run_name='__main__')
 `)
     } catch (error) {
         if (error.name === "PythonError") {
@@ -89,6 +106,20 @@ runpy.run_path('/main.py', run_name='__main__', init_globals={"input":input})
             onPythonError(formattedStr);
         } else {
             throw error;
+        }
+    } finally {
+        // Clear out the files we just created.
+        try {
+            for (const moduleName in pythonModules) {
+                const stat = pyodide.FS.stat("/" + moduleName);
+                if (pyodide.FS.isFile(stat.mode)) {
+                    pyodide.FS.unlink("/" + moduleName)
+                } else {
+                    console.warn("Failed to clear module " + moduleName + "!")
+                }
+            }
+        } catch (error) {
+            console.error(error)
         }
     }
 });

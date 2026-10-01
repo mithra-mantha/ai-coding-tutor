@@ -176,7 +176,6 @@ if (message === "Script error." && lineno === 0) {
 } else {
     window.parent.postMessage({'message':\`\${message}: at \${source}. At line \${lineno} column \${colno}.\`, 'reason':"JS_ERROR_MESSAGE"}, "*");
 };
-console.log("Message posted successfully!");
 }; 
 window.onunhandledrejection = function (event) {
 if (!event.reason || /Script error\\./i.test(event.reason)) {
@@ -184,7 +183,6 @@ if (!event.reason || /Script error\\./i.test(event.reason)) {
 } else {
     window.parent.postMessage({'message':"Unhandled promise rejection: " + event.reason, 'reason':"JS_ERROR_MESSAGE"}, "*");
 };
-console.log("Promise rejected- Message posted successfully!");
 }; 
 <\/script>
     `.replaceAll("\n", " ")
@@ -251,7 +249,7 @@ $("#run-python-button").on("click", function () {
     for (const sessionName in globals.pythonSessions) {
         values[sessionName + ".py"] = globals.pythonSessions[sessionName].getValue();
     }
-    $("#python-preview")[0].contentWindow.postMessage(values, "*");
+    $("#python-preview")[0].contentWindow.postMessage({modules:values, reason:"RUN_CODE"}, "*");
 });
 $("#create-python-module-button").on("click", function () {
     $("#create-python-module-dialog")[0].showModal();
@@ -269,14 +267,26 @@ $("#create-python-module-dialog form").on("submit", function () {
     globals.pythonSessions[moduleName] = ace.createEditSession("", "ace/mode/python");
     editor.setSession(globals.pythonSessions[moduleName])
     $("#create-python-module-dialog form input").val("");
-    $("#python-module-container").append($("<span class='python-module'></span>").text(moduleName + ".py").addClass("selected-python-module"));
+    $("#python-module-container").append($("<span class='python-module'></span>").text(moduleName + ".py").addClass("selected-python-module").append("<span class='delete-python-module'></span>"));
     $("#create-python-module-dialog")[0].close();
 });
 $("#python-module-container").on("click", function (event) {
     if ($("#python-module-container").children().length <= 1) {
         return;
     }
-    const $module = $(event.target);
+    const $target = $(event.target);
+    if ($target.hasClass("delete-python-module")) {
+        const $module = $target.parent();
+        const session = globals.pythonSessions[$module.text().split(".py")[0]]
+        if (editor.getSession() === session) {
+            editor.setSession(mainPySession);
+        }
+        delete globals.pythonSessions[$module.text().split(".py")[0]]
+        $("#python-preview")[0].contentWindow.postMessage({moduleName:$module.text(), reason:"DELETE_MODULE",},"*")
+        $module.remove();
+        return;
+    }
+    const $module = $target;
     const session = globals.pythonSessions[$module.text().split(".py")[0]];
     if (session == undefined) {
         console.warn("Session from python module not found!", $module, $module.text());
@@ -287,7 +297,7 @@ $("#python-module-container").on("click", function (event) {
     });
     $module.addClass("selected-python-module")
     editor.setSession(session);
-})
+});
 $("#autosave-program-checkbox").on("change", function () {
     if (this.checked) {
         $("#save-program-button").prop("disabled", true);
@@ -305,8 +315,7 @@ $("#update-html-preview-checkbox").on("change", function () {
 $("#save-program-button").on("click", saveProgram);
 $("#update-html-preview-button").on("click", showPreview);
 window.addEventListener("message", function (event) {
-    console.log("Received message successfully!")
-    if (event.reason === "JS_ERROR_MESSAGE") {
+    if (event.reason !== "JS_ERROR_MESSAGE") {
         return;
     }
     if (event.source !== $("#html-preview")[0].contentWindow) {

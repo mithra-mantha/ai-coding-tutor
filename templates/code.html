@@ -37,18 +37,6 @@
             background-repeat: no-repeat;
             background-position: center;
         }
-        #python-module-container {
-            overflow-x: auto;
-            .python-module {
-                display: inline-block;
-                cursor: pointer;
-                border: 3px solid black;
-                padding: 3px;
-            }
-            .selected-python-module {
-                background-color: rgb(182, 182, 182);
-            }
-        }
     </style>
 </head>
 <body data-conversation-id= "{% if history %}{{ conversation_id }}{% endif %}" data-html-program="{% if html_program %}{{ html_program }}{% endif %}" data-python-program="{% if python_program %}{{ python_program }}{% endif %}">
@@ -69,10 +57,12 @@
                 <option value="html" selected>HTML/CSS/JavaScript</option>
             </select>
         </div>
-        <div id="python-module-container" class="python-stuff">
-            <span class="python-module" id="main-python-module">main.py</span>
+        <div>
+            <div id="python-module-container" class="python-stuff">
+                <span class="python-module" id="main-python-module">main.py</span>
+            </div>
+            <button id="create-python-module-button" title="Create a new Python module." class="python-stuff">&#43;</button>
         </div>
-        <button id="create-python-module-button" title="Create a new Python module." class="python-stuff">&#43;</button>
         <dialog id="create-python-module-dialog">
             <button onclick="this.parentElement.close()">&#10005;</button>
             <form>
@@ -100,7 +90,7 @@
         </div>
         <button id="new-chat-button">Create New Chat</button>
         <form id="message-form">
-            <textarea id="message-input" aria-label="Ask your question here..." placeholder="Type your prompt here..." rows="3" required aria-></textarea><br>
+            <textarea id="message-input" aria-label="Ask your question here..." placeholder="Type your prompt here..." rows="3" required aria-></textarea>
             <button type="submit">Send</button>
         </form>
     </div>
@@ -315,7 +305,7 @@ $("#update-html-preview-checkbox").on("change", function () {
 $("#save-program-button").on("click", saveProgram);
 $("#update-html-preview-button").on("click", showPreview);
 window.addEventListener("message", function (event) {
-    if (event.reason !== "JS_ERROR_MESSAGE") {
+    if (event.data.reason !== "JS_ERROR_MESSAGE") {
         return;
     }
     if (event.source !== $("#html-preview")[0].contentWindow) {

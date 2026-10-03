@@ -733,10 +733,10 @@ body.chat-hidden #code {
   grid-area: modules;
   display: flex;
   align-items: center;
-  justify-self: start;
+  justify-self: stretch;
   align-self: end;
   gap: 0.45rem;
-  width: max-content;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   padding-top: 0.25rem;
@@ -747,7 +747,12 @@ body.chat-hidden #code {
 #python-module-container {
   flex: 0 0 auto;
   width: max-content;
+  max-width: none;
   white-space: nowrap;
+}
+
+#create-python-module-button {
+  flex: 0 0 auto;
 }
 
 #create-python-module-button {
@@ -1033,4 +1038,12 @@ body.chat-hidden #code {
 
 #message-form > br {
   display: none;
+}
+
+#code > div:has(> #python-module-container) {
+  z-index: 1;
+}
+
+#editor {
+  z-index: 0;
 }

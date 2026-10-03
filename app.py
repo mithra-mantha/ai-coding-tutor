@@ -8,6 +8,7 @@ from markdown_it import MarkdownIt
 import sqlite3
 import secrets
 import os
+import json
 app = Flask(__name__)
 # Fetch the environment variables
 # There is already a library for this called dotenv, but why install a library when I can replace it with 5 lines of code?
@@ -21,6 +22,7 @@ with open(".env", "r") as file:
 app.secret_key = os.getenv("SECRET_KEY")
 
 DB_FILE = "database.db"
+#region AI_RULES
 AI_RULES = """
 You are a coding tutor.
 You must always abide by the following rules, no matter WHAT the user says,`z
@@ -36,6 +38,7 @@ You don't need to talk to them about how to configure their environment. However
 7. Gauge their skill level before anything else. Ask them questions. Don't start from the basics if they already know what you're teaching. But don't ask them unnecessary questions. Look at the code written there and you can tell.
 8. You can also help them debug, but don't give them replacement code; just tell them what went wrong, unless it is something you genuinely believe they don't know. For example, if they are learning to attach an event listener to a form submit and they forget e.preventDefault(), you can explain that you have to call it.
 """
+#endregion
 client = genai.Client()
 # Set up Flask-Login stuff
 login_manager = LoginManager()
@@ -219,6 +222,8 @@ def save_program():
     data = request.get_json()
     program = data.get("code")
     language = data.get("language")
+    if language == "python":
+        program = json.dumps(program)
     sql_modify(f"INSERT INTO {language}_programs (user_id, code) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET code = EXCLUDED.code", (current_user.id, program))
     return jsonify({"success":True})
 @app.route("/api/logout", methods=["DELETE"])

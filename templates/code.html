@@ -125,7 +125,31 @@ htmlSession.setOptions({
     indentedSoftWrap: true,
 });
 htmlSession.setValue($("body").attr("data-html-program"));
-mainPySession.setValue($("body").attr("data-python-program"));
+(function () {
+    const rawJSON = $("body").attr("data-python-program")
+    if (!rawJSON) {
+        return;
+    }
+    const obj = JSON.parse(rawJSON)
+    for (const moduleName in obj) {
+        const program = obj[moduleName]
+        const $module = $("<span class='python-module'></span>").text(moduleName + ".py")
+        if (moduleName === "main") {
+            $module.attr("id", "main-python-module");
+            mainPySession.setValue(program);
+        } else {
+            $module.append("<span class='delete-python-module'></span>")
+            $("#python-module-container").append($module);
+            const newSession = ace.createEditSession(program, "ace/mode/python")
+            globals.pythonSessions[moduleName] = newSession;
+            newSession.on("change", saveProgram)
+        }
+    }
+    $(".python-stuff").hide();
+    if ($("#python-module-container").children().length > 1) {
+        $("#main-python-module").addClass("selected-python-module")
+    } 
+})()
 editor.setSession(htmlSession);
 editor.setTheme("ace/theme/dawn");
 editor.setOptions({
@@ -193,13 +217,24 @@ async function saveProgram () {
     const $p = $("#editor-above p");
     $p.css("--before-image-src", `url("${$p.attr("data-loading-icon")}")`)
     $p.text("Saving...");
+    let payload;
+    if (globals.currentLanguage === "html") {
+        payload = editor.getValue();
+    } else if (globals.currentLanguage === "python") {
+        payload = {}
+        for (const key in globals.pythonSessions) {
+            const session = globals.pythonSessions[key];
+            payload[key] = session.getValue();
+        }
+        console.info("Payload", payload)
+    }
     await fetch("/api/save-program", {
         method:"POST",
         headers:{
             "Content-Type":"application/json"
         },
         body:JSON.stringify({
-            code:editor.getValue(),
+            code: payload,
             language:globals.currentLanguage,
         }),
     });
@@ -218,7 +253,7 @@ const editorOnChange = debounce(function () {
         saveProgram();
     }
 }, 500);
-mainPySession.on("change", editorOnChange);
+mainPySession.on("change", saveProgram);
 htmlSession.on("change", editorOnChange);
 $("#language-selection").on("change", function (event) {
     const newVal = $(event.target).val();
@@ -254,11 +289,14 @@ $("#create-python-module-dialog form").on("submit", function () {
         alert("Please submit a module name.");
         return;
     }
-    globals.pythonSessions[moduleName] = ace.createEditSession("", "ace/mode/python");
-    editor.setSession(globals.pythonSessions[moduleName])
+    const session = ace.createEditSession("", "ace/mode/python");
+    session.on("change", saveProgram)
+    globals.pythonSessions[moduleName] = session;
+    editor.setSession(session)
     $("#create-python-module-dialog form input").val("");
     $("#python-module-container").append($("<span class='python-module'></span>").text(moduleName + ".py").addClass("selected-python-module").append("<span class='delete-python-module'></span>"));
     $("#create-python-module-dialog")[0].close();
+    saveProgram();
 });
 $("#python-module-container").on("click", function (event) {
     if ($("#python-module-container").children().length <= 1) {
@@ -267,6 +305,9 @@ $("#python-module-container").on("click", function (event) {
     const $target = $(event.target);
     if ($target.hasClass("delete-python-module")) {
         const $module = $target.parent();
+        if (!confirm(`Are you sure you want to delete ${$module.text()}? This action cannot be undone.`)) {
+            return;
+        }
         const session = globals.pythonSessions[$module.text().split(".py")[0]]
         if (editor.getSession() === session) {
             editor.setSession(mainPySession);
@@ -274,6 +315,7 @@ $("#python-module-container").on("click", function (event) {
         delete globals.pythonSessions[$module.text().split(".py")[0]]
         $("#python-preview")[0].contentWindow.postMessage({moduleName:$module.text(), reason:"DELETE_MODULE",},"*")
         $module.remove();
+        saveProgram();
         return;
     }
     const $module = $target;
@@ -285,7 +327,7 @@ $("#python-module-container").on("click", function (event) {
     $("#python-module-container").children().each((index, element) => {
         $(element).removeClass("selected-python-module")
     });
-    $module.addClass("selected-python-module")
+    $module.addClass("selected-python-module");
     editor.setSession(session);
 });
 $("#autosave-program-checkbox").on("change", function () {

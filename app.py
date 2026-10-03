@@ -90,12 +90,13 @@ def python_runner_render():
 def create_chat():
     print("Waiting for ai response...")
     data = request.get_json()
+    print(data.get("code"))
     conversation = client.interactions.create(
         model="gemini-3.5-flash-lite",
         input=[
             {"text":data.get("message")},
-            {"text":f"The code below is written in {data.get("language")}."},
-            {"text":data.get("code") if data.get("code") else "The user didn't enter any code."}
+            {"text":f"The code below is written in {data.get("language")}.{"" if data.get("language") == "html" else "It is structured in a JSON format, where each key corresponds to the module the code was written in."}"},
+            {"text":json.dumps(data.get("code")) if data.get("code") else "The user didn't enter any code."}
         ],
         system_instruction=AI_RULES,
     )
@@ -106,13 +107,14 @@ def create_chat():
 def chat():
     print("Waiting for ai response...")
     data = request.get_json()
+    print(data.get("code"))
     conversation_id = data.get("id")
     conversation = client.interactions.create(
         model="gemini-3.7-flash",
         input=[
             {"text":data.get("message")},
-            {"text":f"The code below is written in {data.get("language")}."},
-            {"text":data.get("code") if data.get("code") else "The user didn't enter any code."}
+            {"text":f"The code below is written in {data.get("language")}.{"" if data.get("language") == "html" else "It is structured in a JSON format, where each key corresponds to the module the code was written in."}"},
+            {"text":json.dumps(data.get("code")) if data.get("code") else "The user didn't enter any code."}
         ],
         previous_interaction_id=conversation_id,
         system_instruction=AI_RULES,

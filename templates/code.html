@@ -395,14 +395,24 @@ $("#message-form").on("submit", async function (event) {
             left: 0,
             behavior:"smooth",
         });
-    }, 10)
+    }, 10);
+    let program;
+    if (globals.currentLanguage === "html") {
+        program = editor.getValue()
+    } else {
+        program = {};
+        for (const moduleName in globals.pythonSessions) {
+            const session = globals.pythonSessions[moduleName];
+            program[moduleName + ".py"] = session.getValue();
+        }
+    }
     try {
         const rawResponse = await fetch("/api/chat", {
             method: $("#messages-container").children().length < 2 ? "POST" : "PATCH",
             headers:{
                 "Content-Type":"application/json"
             },
-            body:JSON.stringify({message:value, code:editor.getValue(), id:globals.conversationId, language:globals.currentLanguage}),
+            body:JSON.stringify({message:value, code:program, id:globals.conversationId, language:globals.currentLanguage}),
         });
         if (!rawResponse.ok) {
             throw new Error(`HTTP Error! Status: ${rawResponse.status}.`);

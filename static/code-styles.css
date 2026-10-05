@@ -130,25 +130,6 @@ Don't rely too much on !important, as that is bad practice.
 }
 
 :root {
-  --page-bg: #f3f6fb;
-  --surface: #ffffff;
-  --surface-soft: #f8fafc;
-  --surface-strong: #eaf0f6;
-  --panel-border: #dfe7f1;
-  --panel-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
-  --text: #1f2937;
-  --muted: #5b667a;
-  --chat-bg: #eef3f8;
-  --editor-bg: #f7f9fc;
-  --preview-bg: #ffffff;
-  --user-bubble: #dff7ff;
-  --ai-bubble: #e7f8ea;
-  --accent: #4f8ef7;
-  --accent-soft: rgba(79, 142, 247, 0.1);
-  --danger-bg: #fff1f2;
-  --danger-border: #fecdd3;
-  --danger-text: #9f1239;
-  --radius: 1rem;
   --gap: 1.25rem;
   --panel-pad: 1.1rem;
   --top-height: 6.5rem;
@@ -165,7 +146,11 @@ body {
   height: 100%;
   background: var(--page-bg);
   color: var(--text);
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-ui);
+}
+
+#editor .ace_editor {
+  font-family: var(--font-code);
 }
 
 body {
@@ -210,7 +195,7 @@ body {
 #logout-button:focus-visible {
   transform: translateY(-1px);
   border-color: var(--accent);
-  box-shadow: 0 8px 18px rgba(79, 142, 247, 0.12);
+  box-shadow: var(--accent-shadow);
   outline: none;
 }
 
@@ -296,7 +281,7 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--message-shadow);
 }
 
 .user-message {
@@ -349,7 +334,7 @@ body {
 #message-form button:hover {
   transform: translateY(-1px);
   border-color: var(--accent);
-  box-shadow: 0 8px 18px rgba(79, 142, 247, 0.12);
+  box-shadow: var(--accent-shadow);
 }
 
 #new-chat-button {
@@ -379,7 +364,7 @@ body {
   border: 1px solid var(--danger-border);
   border-radius: 0.9rem;
   color: var(--danger-text);
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.14);
+  box-shadow: var(--error-shadow);
   padding: 0.85rem 0.9rem 0.9rem 1rem;
   z-index: 10;
 }
@@ -398,7 +383,7 @@ body {
   justify-self: end;
   align-self: start;
   border: 1px solid var(--danger-border);
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--surface-overlay-muted);
   color: var(--danger-text);
   width: 2rem;
   height: 2rem;
@@ -413,7 +398,7 @@ body {
 
 #close-error-div:hover,
 #close-error-div:focus-visible {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--surface-overlay);
   outline: none;
 }
 
@@ -581,8 +566,8 @@ body.chat-hidden #code {
   background-color: var(--surface-strong);
   background-image: radial-gradient(
     circle at 0.75rem 50%,
-    #ffffff 0 0.36rem,
-    transparent 0.38rem
+    var(--surface) 0 0.36rem,
+    var(--transparent) 0.38rem
   );
   background-repeat: no-repeat;
   cursor: pointer;
@@ -654,7 +639,7 @@ body.chat-hidden #code {
 #update-html-preview-button:focus-visible:not(:disabled),
 #run-python-button:focus-visible:not(:disabled) {
   border-color: var(--accent);
-  box-shadow: 0 6px 14px rgba(79, 142, 247, 0.12);
+  box-shadow: var(--accent-shadow);
   outline: 3px solid var(--accent-soft);
   outline-offset: 2px;
   transform: translateY(-1px);
@@ -765,7 +750,7 @@ body.chat-hidden #code {
 }
 
 #python-module-container .selected-python-module {
-  border-bottom-color: transparent;
+  border-bottom-color: var(--transparent);
   background: var(--editor-bg);
 }
 
@@ -841,7 +826,7 @@ body.chat-hidden #code {
   margin: 0;
   border: 0;
   border-radius: 0.2rem;
-  background: transparent;
+  background: var(--transparent);
   color: var(--muted);
   cursor: pointer;
 }
@@ -887,11 +872,11 @@ body.chat-hidden #code {
   border-radius: 0.75rem;
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+  box-shadow: var(--dialog-shadow);
 }
 
 #create-python-module-dialog::backdrop {
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--dialog-backdrop);
   backdrop-filter: blur(2px);
 }
 
@@ -966,7 +951,7 @@ body.chat-hidden #code {
   border: 1px solid var(--accent);
   border-radius: 0.5rem;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   font: inherit;
   font-weight: 600;
   cursor: pointer;

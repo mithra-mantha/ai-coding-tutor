@@ -1,0 +1,120 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+}
+
+body {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+#login-state,
+#code-state {
+  width: min(100%, 32rem);
+}
+
+.centered {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  margin: 0;
+  padding: clamp(1.5rem, 6vw, 2.75rem);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  box-shadow: var(--panel-shadow);
+  text-align: left;
+}
+
+.centered h1 {
+  margin: 0;
+  font-size: clamp(1.4rem, 4vw, 1.8rem);
+  line-height: 1.25;
+}
+
+.centered label {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.centered input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.7rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.centered input:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 1px;
+}
+
+.centered button {
+  min-height: 3rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.7rem;
+  background: var(--accent);
+  color: var(--surface);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.centered button:hover,
+.centered button:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: var(--accent-shadow-strong);
+  outline: none;
+}
+
+#email-warning,
+#code-warning {
+  min-height: 1.25rem;
+  margin: -0.5rem 0 0;
+  color: var(--danger-text);
+  font-size: 0.95rem;
+}
+
+#code-form fieldset {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+#code-input {
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 0.75rem;
+  }
+
+  .centered {
+    gap: 0.85rem;
+    padding: 1.4rem;
+  }
+}

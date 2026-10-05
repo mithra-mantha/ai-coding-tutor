@@ -1,0 +1,33 @@
+:root {
+  --page-bg: #f3f6fb;
+  --transparent: transparent;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --surface-strong: #eaf0f6;
+  --panel-border: #dfe7f1;
+  --panel-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  --text: #1f2937;
+  --muted: #5b667a;
+  --chat-bg: #eef3f8;
+  --editor-bg: #f7f9fc;
+  --preview-bg: #ffffff;
+  --user-bubble: #dff7ff;
+  --ai-bubble: #e7f8ea;
+  --accent: #4f8ef7;
+  --accent-soft: rgba(79, 142, 247, 0.1);
+  --danger-bg: #fff1f2;
+  --danger-border: #fecdd3;
+  --danger-text: #9f1239;
+  --surface-overlay-muted: rgba(255, 255, 255, 0.5);
+  --surface-overlay: rgba(255, 255, 255, 0.8);
+  --dialog-backdrop: rgba(15, 23, 42, 0.4);
+  --accent-shadow: 0 8px 18px rgba(79, 142, 247, 0.12);
+  --accent-shadow-strong: 0 8px 18px rgba(79, 142, 247, 0.2);
+  --message-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --error-shadow: 0 20px 40px rgba(15, 23, 42, 0.14);
+  --dialog-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+  --on-accent: #ffffff;
+  --radius: 1rem;
+  --font-ui: "Segoe UI", Arial, sans-serif;
+  --font-code: "Cascadia Code", Consolas, monospace;
+}

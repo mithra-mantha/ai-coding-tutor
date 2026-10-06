@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, request, jsonify, url_for, redirect
 from google import genai
 from werkzeug.exceptions import BadRequest
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -97,15 +97,19 @@ def python_runner_render():
 def create_chat():
     print("Waiting for ai response...")
     data = request.get_json()
-    conversation = client.interactions.create(
-        model="gemini-3.5-flash-lite",
-        input=[
-            {"text":data.get("message")},
-            {"text":f"The code below is written in {data.get("language")}.{"" if data.get("language") == "html" else "It is structured in a JSON format, where each key corresponds to the module the code was written in."}"},
-            {"text":json.dumps(data.get("code")) if data.get("code") else "The user didn't enter any code."}
-        ],
-        system_instruction=AI_RULES,
-    )
+    try:
+        conversation = client.interactions.create(
+            model="gemini-3.5-flash-lite",
+            input=[
+                {"text":data.get("message")},
+                {"text":f"The code below is written in {data.get("language")}.{"" if data.get("language") == "html" else "It is structured in a JSON format, where each key corresponds to the module the code was written in."}"},
+                {"text":json.dumps(data.get("code")) if data.get("code") else "The user didn't enter any code."}
+            ],
+            system_instruction=AI_RULES,
+        )
+    except Exception as e:
+        print("\033[33m" + e + "\033[0m")
+        return jsonify({"message":"", "warning":"UNKNOWN"})
     print("Done!")
     save_conversation(conversation.id)
     return jsonify({"message":md.render(conversation.output_text), "id":conversation.id})

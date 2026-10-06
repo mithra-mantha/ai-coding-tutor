@@ -93,8 +93,8 @@ def register_render():
 def python_runner_render():
     return render_template("python-runner.html")
 
-@app.route("/api/chat", methods=["POST"])
-def create_chat():
+@app.route("/api/chat", methods=["POST", "PATCH"])
+def chat():
     print("Waiting for ai response...")
     data = request.get_json()
     try:
@@ -106,29 +106,11 @@ def create_chat():
                 {"text":json.dumps(data.get("code")) if data.get("code") else "The user didn't enter any code."}
             ],
             system_instruction=AI_RULES,
+            previous_interaction_id=(data.get("id") if request.method == "PATCH" else None),
         )
     except Exception as e:
-        print("\033[33m" + e + "\033[0m")
+        print("\033[33m" + str(e) + "\033[0m")
         return jsonify({"message":"", "warning":"UNKNOWN"})
-    print("Done!")
-    save_conversation(conversation.id)
-    return jsonify({"message":md.render(conversation.output_text), "id":conversation.id})
-@app.route("/api/chat", methods=["PATCH"])
-def chat():
-    print("Waiting for ai response...")
-    data = request.get_json()
-    print(data.get("code"))
-    conversation_id = data.get("id")
-    conversation = client.interactions.create(
-        model="gemini-3.7-flash",
-        input=[
-            {"text":data.get("message")},
-            {"text":f"The code below is written in {data.get("language")}.{"" if data.get("language") == "html" else "It is structured in a JSON format, where each key corresponds to the module the code was written in."}"},
-            {"text":json.dumps(data.get("code")) if data.get("code") else "The user didn't enter any code."}
-        ],
-        previous_interaction_id=conversation_id,
-        system_instruction=AI_RULES,
-    )
     print("Done!")
     save_conversation(conversation.id)
     return jsonify({"message":md.render(conversation.output_text), "id":conversation.id})

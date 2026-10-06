@@ -421,7 +421,7 @@ $("#message-form").on("submit", async function (event) {
         const response = await rawResponse.json();
         if (!response.message) {
             if (response.warning) {
-                alert("Chat response failed. Try again.");
+                alert("The chat response failed for an unknown reason. Try again.");
                 console.warn("Request failed because of " + response.warning)
                 return;
             }

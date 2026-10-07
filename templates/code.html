@@ -98,10 +98,8 @@
     <div id="error-div" style="display: none;"><button id="close-error-div">&#10005;</button><p></p></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ace.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@microsoft/fetch-event-source@2.0.1/lib/cjs/index.min.js"></script>
     <script>
 "use strict";
-import { fetchEventSource } from "@microsoft/fetch-event-source"
 let globals = {
     conversationId:
     $("body").attr("data-conversation-id").trim() ? $("body").attr("data-conversation-id").trim() : null
@@ -410,31 +408,24 @@ $("#message-form").on("submit", async function (event) {
         }
     }
     try {
-        const ctrl = new AbortController()
-        const rawResponse = await fetchEventSource("/api/chat", {
+        const rawResponse = await fetch("/api/chat", {
             method: $("#messages-container").children().length < 2 ? "POST" : "PATCH",
             headers:{
                 "Content-Type":"application/json"
             },
             body:JSON.stringify({message:value, code:program, id:globals.conversationId, language:globals.currentLanguage}),
-            signal:ctrl.signal,
-            
         });
         if (!rawResponse.ok) {
             throw new Error(`HTTP Error! Status: ${rawResponse.status}.`);
         }
-        if ((rawResponse.headers.get("content-type") || '').includes("application/json")) {
-            const response = await rawResponse.json();
-            if (!response.message) {
-                if (response.warning) {
-                    alert("The chat response failed for an unknown reason. Try again.");
-                    console.warn("Request failed because of " + response.warning)
-                    return;
-                }
-                throw new Error("Response empty.");
+        const response = await rawResponse.json();
+        if (!response.message) {
+            if (response.warning) {
+                alert("The chat response failed for an unknown reason. Try again.");
+                console.warn("Request failed because of " + response.warning)
+                return;
             }
-        } else {
-
+            throw new Error("Response empty.");
         }
         globals.conversationId = response.id
         addMessageToChat(response.message, false);

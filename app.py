@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, url_for, redirect, Response
+from flask import Flask, render_template, request, jsonify, url_for, redirect
 from google import genai
 from werkzeug.exceptions import BadRequest
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,6 +8,7 @@ from markdown_it import MarkdownIt
 import sqlite3
 import secrets
 import os
+import json
 app = Flask(__name__)
 # Fetch the environment variables
 # There is already a library for this called dotenv, but why install a library when I can replace it with 5 lines of code?
@@ -102,28 +103,17 @@ def chat():
             input=[
                 {"text":data.get("message")},
                 {"text":f"The code below is written in {data.get("language")}.{"" if data.get("language") == "html" else "It is structured in a JSON format, where each key corresponds to the module the code was written in."}"},
-                {"text":jsonify(data.get("code")) if data.get("code") else "The user didn't enter any code."}
+                {"text":json.dumps(data.get("code")) if data.get("code") else "The user didn't enter any code."}
             ],
             system_instruction=AI_RULES,
             previous_interaction_id=(data.get("id") if request.method == "PATCH" else None),
-            stream=True,
         )
     except Exception as e:
         print("\033[33m" + str(e) + "\033[0m")
-        return jsonify({"message":"", "warning":"CONVERSATION_CREATION_FAILED"})
-    def stream():
-        try:
-            for event in conversation.stream:
-                if event.event_type == "step.delta":
-                    if event.delta_type == "text":
-                        print(event.delta.text)
-                        yield event.delta.text
-        except Exception as e:
-            print("\033[33m" + str(e) + "\033[0m")
-            yield f"data: [Error: {str(e)}]\n\n"
+        return jsonify({"message":"", "warning":"UNKNOWN"})
     print("Done!")
     save_conversation(conversation.id)
-    return Response(stream(), mimetype="text/event-stream")
+    return jsonify({"message":md.render(conversation.output_text), "id":conversation.id})
 @app.route("/api/chat", methods=["DELETE"])
 def delete_conversation():
     sql_modify("DELETE FROM conversations WHERE user_id = ?", (current_user.id,))
@@ -227,7 +217,7 @@ def save_program():
     program = data.get("code")
     language = data.get("language")
     if language == "python":
-        program = jsonify(program)
+        program = json.dumps(program)
     sql_modify(f"INSERT INTO {language}_programs (user_id, code) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET code = EXCLUDED.code", (current_user.id, program))
     return jsonify({"success":True})
 @app.route("/api/logout", methods=["DELETE"])

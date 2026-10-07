@@ -110,21 +110,18 @@ let globals = {
 /* You've probably noticed something- there are two copies of the conversation id; one in JavaScript and one in HTML.
 The HTML one is only for Jinja to manipulate at the load of the page. Afterward, JavaScript handles the rest. I didn't put Jinja directly in JavaScript because then my IDE throws an error; it's not native JavaScript syntax. And my IDE's Jinja mode is nowhere near as excellent as its HTML mode.
 */
+function configAceSession(session) {
+    session.setOptions({
+    tabSize: 4,
+    useSoftTabs: true,
+    wrap: false,
+});
+}
 const editor = ace.edit("editor");
 const mainPySession = ace.createEditSession("", "ace/mode/python")
-mainPySession.setOptions({
-    tabSize: 4,
-    useSoftTabs: true,
-    wrap: true,
-    indentedSoftWrap: true,
-});
 const htmlSession = ace.createEditSession("", "ace/mode/html")
-htmlSession.setOptions({
-    tabSize: 4,
-    useSoftTabs: true,
-    wrap: true,
-    indentedSoftWrap: true,
-});
+configAceSession(htmlSession)
+configAceSession(mainPySession)
 htmlSession.setValue($("body").attr("data-html-program"));
 (function () {
     const rawJSON = $("body").attr("data-python-program")
@@ -142,6 +139,7 @@ htmlSession.setValue($("body").attr("data-html-program"));
             $module.append("<span class='delete-python-module'></span>")
             $("#python-module-container").append($module);
             const newSession = ace.createEditSession(program, "ace/mode/python")
+            configAceSession(newSession)
             globals.pythonSessions[moduleName] = newSession;
             newSession.on("change", saveProgram)
         }
@@ -156,8 +154,8 @@ editor.setTheme("ace/theme/dawn");
 editor.setOptions({
     fontSize: "16px",
     fontFamily: "Courier New, Courier, monospace",
-    showPrintMargin: false,
-    wrap: true,
+    showPrintMargin: true,
+    wrap: false,
     useSoftTabs: true,
 });
 editor.resize();
@@ -291,6 +289,7 @@ $("#create-python-module-dialog form").on("submit", function () {
         return;
     }
     const session = ace.createEditSession("", "ace/mode/python");
+    configAceSession(session)
     session.on("change", saveProgram)
     globals.pythonSessions[moduleName] = session;
     editor.setSession(session)
@@ -366,7 +365,7 @@ $("#close-error-div").on("click", function () {
 function addMessageToChat(message, isFromHuman) {
     const newEl = $(`
 <div class="message ${isFromHuman ? 'user-message' : 'ai-message'}"></div>
-    `)
+    `.trim())
     if (isFromHuman) {
         // The human likely didn't want to turn it to html.
         newEl.text(message);
@@ -375,6 +374,7 @@ function addMessageToChat(message, isFromHuman) {
         newEl.html(message);
     }
     newEl.appendTo("#messages-container");
+    return newEl
 }
 $("#message-input").on("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -387,7 +387,7 @@ $("#message-form").on("submit", async function (event) {
     event.preventDefault();
     const value = $("#message-input").val();
     const container = $("#messages-container")[0]
-    addMessageToChat(value, true);
+    const $userMessage = addMessageToChat(value, true);
     $("#message-input").val("");
     // Scroll to the bottom automatically, to the end of the message.
     setTimeout(() => {
@@ -430,11 +430,15 @@ $("#message-form").on("submit", async function (event) {
         globals.conversationId = response.id
         addMessageToChat(response.message, false);
         // Scroll again so that the AI message from the top is visible, so they can start reading.
-        container.scrollBy({
-            top:container.offsetHeight, // Since we earlier scrolled so that the user message is at the bottom, scroll the height of the container so that the message is now at the top.
-            left: 0,
-            behavior:"smooth",
-        });
+        setTimeout(
+            () => {
+                container.scrollBy({
+                    top:container.offsetHeight - $userMessage.outerHeight(true), // Since we earlier scrolled so that the user message is at the bottom, scroll the height of the container so that the message is now at the top.
+                    left: 0,
+                    behavior:"smooth",
+                })
+            }, 10
+        )
     } catch (error) {
         console.error(error);
     }

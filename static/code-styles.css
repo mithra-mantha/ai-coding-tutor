@@ -180,23 +180,25 @@ body {
 }
 
 #logout-button {
-  border: 1px solid var(--panel-border);
-  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-strong) 100%);
-  color: var(--text);
+  border: 1px solid var(--button-border);
+  background: var(--button-background);
+  color: var(--button-text);
   font: inherit;
-  font-weight: 700;
-  border-radius: 0.7rem;
+  font-weight: var(--button-weight);
+  border-radius: var(--button-radius);
   padding: 0.7rem 1rem;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: var(--button-transition);
 }
 
 #logout-button:hover,
 #logout-button:focus-visible {
   transform: translateY(-1px);
   border-color: var(--accent);
-  box-shadow: var(--accent-shadow);
-  outline: none;
+  background: var(--button-hover-background);
+  box-shadow: var(--button-hover-shadow);
+  outline: var(--button-focus-ring);
+  outline-offset: 2px;
 }
 
 #code {
@@ -204,6 +206,7 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--gap);
+  column-gap: 0;
   min-height: 0;
   height: 100%;
   align-items: stretch;
@@ -222,7 +225,7 @@ body {
   height: 100%;
   min-height: 0;
   border: 1px solid var(--panel-border);
-  border-radius: calc(var(--radius) - 0.2rem);
+  /* border-radius: calc(var(--radius) - 0.2rem); */
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -318,27 +321,45 @@ body {
 }
 
 #new-chat-button,
+#tour-start-button,
 #message-form button {
-  border: 1px solid var(--panel-border);
-  border-radius: 0.7rem;
-  background: var(--surface);
-  color: var(--text);
+  border: 1px solid var(--button-border);
+  border-radius: var(--button-radius);
+  background: var(--button-background);
+  color: var(--button-text);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--button-weight);
   padding: 0.7rem 1rem;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: var(--button-transition);
 }
 
 #new-chat-button:hover,
-#message-form button:hover {
+#new-chat-button:focus-visible,
+#tour-start-button:hover,
+#tour-start-button:focus-visible,
+#message-form button:hover,
+#message-form button:focus-visible {
   transform: translateY(-1px);
   border-color: var(--accent);
-  box-shadow: var(--accent-shadow);
+  background: var(--button-hover-background);
+  box-shadow: var(--button-hover-shadow);
+  outline: var(--button-focus-ring);
+  outline-offset: 2px;
 }
 
 #new-chat-button {
   justify-self: end;
+}
+
+#tour-start-button {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 5;
+  min-height: 0;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.875rem;
 }
 
 #editor .ace_editor,
@@ -600,19 +621,16 @@ body.chat-hidden #code {
   grid-row: 4;
   flex: 0 0 auto;
   margin: 0;
-  border: 1px solid var(--panel-border);
-  border-radius: 0.7rem;
+  border: 1px solid var(--button-border);
+  border-radius: var(--button-radius);
   padding: 0.6rem 0.85rem;
-  background: var(--surface);
-  color: var(--text);
+  background: var(--button-background);
+  color: var(--button-text);
   font: inherit;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: var(--button-weight);
   cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  transition: var(--button-transition);
 }
 
 #save-program-button {
@@ -639,8 +657,9 @@ body.chat-hidden #code {
 #update-html-preview-button:focus-visible:not(:disabled),
 #run-python-button:focus-visible:not(:disabled) {
   border-color: var(--accent);
-  box-shadow: var(--accent-shadow);
-  outline: 3px solid var(--accent-soft);
+  background: var(--button-hover-background);
+  box-shadow: var(--button-hover-shadow);
+  outline: var(--button-focus-ring);
   outline-offset: 2px;
   transform: translateY(-1px);
 }
@@ -948,19 +967,21 @@ body.chat-hidden #code {
   justify-self: end;
   min-height: 2.5rem;
   padding: 0.55rem 1rem;
-  border: 1px solid var(--accent);
-  border-radius: 0.5rem;
-  background: var(--accent);
-  color: var(--on-accent);
+  border: 1px solid var(--button-primary-border);
+  border-radius: var(--button-radius);
+  background: var(--button-primary-background);
+  color: var(--button-primary-text);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--button-weight);
   cursor: pointer;
+  transition: var(--button-transition);
 }
 
 #create-python-module-dialog form > button[type="submit"]:hover,
 #create-python-module-dialog form > button[type="submit"]:focus-visible {
-  filter: brightness(0.94);
-  outline: 3px solid var(--accent-soft);
+  transform: translateY(-1px);
+  box-shadow: var(--button-primary-hover-shadow);
+  outline: var(--button-focus-ring);
   outline-offset: 2px;
 }
 
@@ -1031,4 +1052,399 @@ body.chat-hidden #code {
 
 #editor {
   z-index: 0;
+}
+
+/* Shared blue button treatment */
+#python-module-container .python-module,
+#python-module-container .delete-python-module,
+#create-python-module-button,
+#logout-button,
+#new-chat-button,
+#message-form button,
+#close-error-div,
+#save-program-button,
+#update-html-preview-button,
+#run-python-button,
+#create-python-module-dialog > button:first-child,
+#create-python-module-dialog form > button[type="submit"] {
+  border: 1px solid var(--button-border);
+  background: var(--button-background);
+  color: var(--button-text);
+  transition: var(--button-transition);
+}
+
+#python-module-container .selected-python-module {
+  border-color: var(--button-border);
+  background: var(--button-selected-background);
+  color: var(--button-text);
+}
+
+#python-module-container .python-module:not(:disabled):hover,
+#python-module-container .python-module:not(:disabled):focus-visible,
+#python-module-container .delete-python-module:not(:disabled):hover,
+#python-module-container .delete-python-module:not(:disabled):focus-visible,
+#create-python-module-button:not(:disabled):hover,
+#create-python-module-button:not(:disabled):focus-visible,
+#logout-button:not(:disabled):hover,
+#logout-button:not(:disabled):focus-visible,
+#new-chat-button:not(:disabled):hover,
+#new-chat-button:not(:disabled):focus-visible,
+#message-form button:not(:disabled):hover,
+#message-form button:not(:disabled):focus-visible,
+#close-error-div:not(:disabled):hover,
+#close-error-div:not(:disabled):focus-visible,
+#save-program-button:not(:disabled):hover,
+#save-program-button:not(:disabled):focus-visible,
+#update-html-preview-button:not(:disabled):hover,
+#update-html-preview-button:not(:disabled):focus-visible,
+#run-python-button:not(:disabled):hover,
+#run-python-button:not(:disabled):focus-visible,
+#create-python-module-dialog > button:first-child:not(:disabled):hover,
+#create-python-module-dialog > button:first-child:not(:disabled):focus-visible,
+#create-python-module-dialog form > button[type="submit"]:not(:disabled):hover,
+#create-python-module-dialog form > button[type="submit"]:not(:disabled):focus-visible {
+  border-color: var(--button-hover-border);
+  background: var(--button-hover-background);
+  color: var(--button-hover-text);
+  box-shadow: var(--button-hover-shadow);
+  outline: var(--button-focus-ring);
+  outline-offset: 2px;
+  transform: translateY(-1px);
+}
+
+#python-module-container .selected-python-module:not(:disabled):hover,
+#python-module-container .selected-python-module:not(:disabled):focus-visible {
+  background: var(--button-hover-background);
+}
+
+#save-program-button:disabled,
+#update-html-preview-button:disabled,
+#run-python-button:disabled {
+  border-color: var(--button-disabled-border);
+  background: var(--button-disabled-background);
+  color: var(--button-disabled-text);
+  opacity: var(--button-disabled-opacity);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Editor-above compact control layout */
+#editor-above {
+  grid-template-columns: minmax(0, 1fr) max-content max-content;
+  grid-template-rows: repeat(5, auto);
+  column-gap: 0.65rem;
+  row-gap: 0.45rem;
+}
+
+#editor-above > p:first-child {
+  grid-column: 1;
+  grid-row: 1 / span 5;
+  align-self: start;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#editor-above > p[data-loading-icon] {
+  grid-column: 2 / 4;
+  grid-row: 1;
+  justify-self: end;
+  width: auto;
+  text-align: right;
+}
+
+#editor-above label {
+  grid-column: 2;
+  justify-self: end;
+  text-align: right;
+}
+
+#editor-above label[for="update-html-preview-checkbox"],
+#editor-above #update-html-preview-checkbox {
+  grid-row: 2;
+}
+
+#editor-above label[for="autosave-program-checkbox"],
+#editor-above #autosave-program-checkbox {
+  grid-row: 3;
+}
+
+#editor-above label[for="language-selection"],
+#editor-above #language-selection {
+  grid-row: 4;
+}
+
+#editor-above #update-html-preview-checkbox,
+#editor-above #autosave-program-checkbox,
+#editor-above #language-selection {
+  grid-column: 3;
+  justify-self: start;
+}
+
+#save-program-button,
+#update-html-preview-button,
+#run-python-button {
+  grid-row: 5;
+}
+
+#save-program-button {
+  grid-column: 2;
+  justify-self: start;
+}
+
+#update-html-preview-button,
+#run-python-button {
+  grid-column: 3;
+  justify-self: start;
+}
+
+@media (max-width: 620px) {
+  #editor-above {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: repeat(6, auto);
+  }
+
+  #editor-above > p:first-child,
+  #editor-above > p[data-loading-icon] {
+    grid-column: 1 / -1;
+  }
+
+  #editor-above > p:first-child {
+    grid-row: 1;
+  }
+
+  #editor-above > p[data-loading-icon] {
+    grid-row: 2;
+  }
+
+  #editor-above label {
+    grid-column: 1;
+    justify-self: start;
+    text-align: left;
+  }
+
+  #editor-above label[for="update-html-preview-checkbox"],
+  #editor-above #update-html-preview-checkbox {
+    grid-row: 3;
+  }
+
+  #editor-above label[for="autosave-program-checkbox"],
+  #editor-above #autosave-program-checkbox {
+    grid-row: 4;
+  }
+
+  #editor-above label[for="language-selection"],
+  #editor-above #language-selection {
+    grid-row: 5;
+  }
+
+  #editor-above #update-html-preview-checkbox,
+  #editor-above #autosave-program-checkbox,
+  #editor-above #language-selection {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  #save-program-button,
+  #update-html-preview-button,
+  #run-python-button {
+    grid-row: 6;
+  }
+
+  #save-program-button {
+    grid-column: 1;
+    justify-self: start;
+  }
+}
+
+#tour-container {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.tour-step[open] {
+  position: fixed;
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem 0.6rem;
+  width: min(22rem, calc(100vw - 2rem));
+  max-width: none;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--dialog-shadow);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.tour-step[open]::backdrop {
+  background: var(--transparent);
+}
+
+.tour-step h2,
+.tour-step p,
+.tour-step .progress-bar {
+  grid-column: 1 / -1;
+}
+
+.tour-step h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.tour-step p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.tour-step button {
+  min-height: 2.5rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--button-primary-border);
+  border-radius: var(--button-radius);
+  background: var(--button-primary-background);
+  color: var(--button-primary-text);
+  font: inherit;
+  font-weight: var(--button-weight);
+  cursor: pointer;
+}
+
+.tour-step .next-tour-step {
+  grid-column: 2;
+  justify-self: end;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.tour-step .skip-tour {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.tour-step .next-tour-step:hover,
+.tour-step .next-tour-step:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--accent-shadow-strong);
+}
+
+.tour-step .progress-bar {
+  width: 100%;
+  height: 0.45rem;
+  accent-color: var(--accent);
+}
+
+body.tour-step-2 #chat,
+body.tour-step-3 #editor-above {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  box-shadow: var(--accent-shadow-strong);
+}
+
+body.tour-step-1 #code,
+body.tour-step-1 #editor-above,
+body.tour-step-3 #editor,
+body.tour-step-3 #html-preview-container,
+body.tour-step-3 #python-result-container {
+  outline: none;
+  box-shadow: none;
+}
+
+body.tour-step-1 #code {
+  position: relative;
+  column-gap: 0;
+}
+
+body.tour-step-1 #code::after {
+  grid-column: 1 / -1;
+  grid-row: 2 / 4;
+  border: 3px solid var(--accent);
+  border-radius: 0;
+  box-shadow: var(--accent-shadow-strong);
+  content: "";
+  pointer-events: none;
+  z-index: 2;
+}
+
+body.tour-step-1 #code {
+  border-color: var(--muted);
+  background: color-mix(in srgb, var(--surface), #000 65%);
+}
+
+body.tour-step-1 #code > div:has(> #python-module-container) {
+  background: var(--surface);
+}
+
+body.tour-step-3 #code {
+  border-color: var(--muted);
+  background: color-mix(in srgb, var(--surface), #000 65%);
+  box-shadow: none;
+}
+
+body.tour-step-3 #editor-above {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 3px var(--accent), var(--accent-shadow-strong);
+}
+
+body.tour-step-1,
+body.tour-step-2,
+body.tour-step-3 {
+  background: var(--text);
+  background: color-mix(in srgb, var(--page-bg), #000 65%);
+}
+
+body.tour-step-1 > #top,
+body.tour-step-1 > #chat,
+body.tour-step-1 > #code > #editor-above,
+body.tour-step-2 > #top,
+body.tour-step-2 > #code,
+body.tour-step-3 > #top,
+body.tour-step-3 > #chat,
+body.tour-step-3 > #code > :not(#editor-above, #create-python-module-dialog) {
+  filter: brightness(0.35);
+}
+
+@supports (anchor-name: --tour-target) and (position-area: right) {
+  body.tour-step-2 #chat {
+    anchor-name: --tour-target;
+  }
+
+  body.tour-step-3 #editor-above {
+    anchor-name: --tour-target;
+  }
+
+  #tour-step-1[open],
+  #tour-step-2[open],
+  #tour-step-3[open] {
+    top: auto;
+    left: auto;
+    transform: none;
+    position-anchor: --tour-target;
+    position-area: right;
+    position-try-fallbacks: flip-inline, flip-block;
+  }
+}
+
+@media (max-width: 980px) {
+  body.tour-step-1 #code::after {
+    grid-row: 3 / 5;
+  }
+}
+#editor {
+  border-radius: var(--radius);
 }

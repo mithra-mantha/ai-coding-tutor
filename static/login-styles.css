@@ -69,21 +69,22 @@ body {
 .centered button {
   min-height: 3rem;
   padding: 0.7rem 1rem;
-  border: 1px solid var(--accent);
-  border-radius: 0.7rem;
-  background: var(--accent);
-  color: var(--surface);
+  border: 1px solid var(--button-primary-border);
+  border-radius: var(--button-radius);
+  background: var(--button-primary-background);
+  color: var(--button-primary-text);
   font: inherit;
-  font-weight: 700;
+  font-weight: var(--button-weight);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: var(--button-transition);
 }
 
 .centered button:hover,
 .centered button:focus-visible {
   transform: translateY(-1px);
-  box-shadow: var(--accent-shadow-strong);
-  outline: none;
+  box-shadow: var(--button-primary-hover-shadow);
+  outline: var(--button-focus-ring);
+  outline-offset: 2px;
 }
 
 #email-warning,
@@ -117,4 +118,37 @@ body {
     gap: 0.85rem;
     padding: 1.4rem;
   }
+}
+
+.centered button:not(:disabled):hover,
+.centered button:not(:disabled):focus-visible {
+  border-color: var(--button-hover-border);
+  background: var(--button-hover-background);
+  color: var(--button-hover-text);
+  box-shadow: var(--button-hover-shadow);
+  outline: var(--button-focus-ring);
+  outline-offset: 2px;
+  transform: translateY(-1px);
+}
+
+.centered button:disabled {
+  border-color: var(--button-disabled-border);
+  background: var(--button-disabled-background);
+  color: var(--button-disabled-text);
+  opacity: var(--button-disabled-opacity);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+#code-form-disable:disabled {
+  opacity: 0.58;
+}
+
+#code-form-disable:disabled input,
+#code-form-disable:disabled button {
+  border-color: var(--button-disabled-border);
+  background: var(--button-disabled-background);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
 }

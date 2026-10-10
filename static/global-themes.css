@@ -27,7 +27,65 @@
   --error-shadow: 0 20px 40px rgba(15, 23, 42, 0.14);
   --dialog-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
   --on-accent: #ffffff;
+  --button-border: #aeb9c7;
+  --button-background: #f1f4f8;
+  --button-text: var(--text);
+  --button-hover-background: #e3e9f0;
+  --button-hover-shadow: 0 4px 10px rgba(31, 41, 55, 0.12);
+  --button-focus-ring: 3px solid var(--accent-soft);
+  --button-radius: 0.7rem;
+  --button-weight: 600;
+  --button-primary-background: var(--button-background);
+  --button-primary-border: var(--button-border);
+  --button-primary-text: var(--button-text);
+  --button-primary-hover-shadow: var(--button-hover-shadow);
+  --button-hover-border: #cbd5e1;
+  --button-hover-text: var(--text);
+  --button-selected-background: #d9e1ea;
+  --button-disabled-background: #d1d8e1;
+  --button-disabled-border: #cbd5e1;
+  --button-disabled-text: #64748b;
+  --button-disabled-opacity: 1;
+  --button-transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
   --radius: 1rem;
   --font-ui: "Segoe UI", Arial, sans-serif;
   --font-code: "Cascadia Code", Consolas, monospace;
+}
+
+/* Shared button states */
+button {
+  border: 1px solid var(--button-border);
+  background: var(--button-background);
+  color: var(--button-text);
+  transition: var(--button-transition);
+}
+
+button:not(:disabled):hover,
+button:not(:disabled):focus-visible {
+  border-color: var(--button-hover-border);
+  background: var(--button-hover-background);
+  color: var(--button-hover-text);
+  box-shadow: var(--button-hover-shadow);
+  outline: var(--button-focus-ring);
+  outline-offset: 2px;
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  border-color: var(--button-disabled-border);
+  background: var(--button-disabled-background);
+  color: var(--button-disabled-text);
+  opacity: var(--button-disabled-opacity);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  border-color: var(--button-disabled-border);
+  background: var(--button-disabled-background);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
 }

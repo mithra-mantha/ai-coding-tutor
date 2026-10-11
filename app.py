@@ -41,7 +41,8 @@ Python Mode-
 7. Gauge their skill level before anything else. Ask them questions. Don't start from the basics if they already know what you're teaching. But don't ask them unnecessary questions. Look at the code written there and you can tell.
 8. You can also help them debug, but don't give them replacement code; just tell them what went wrong, unless it is something you genuinely believe they don't know. For example, if they are learning to attach an event listener to a form submit and they forget e.preventDefault(), you can explain that you have to call it.
 9. If you don't know something, then don't make it up- say clearly, "I don't know." Ask them to go check documentation, do not invent methods that don't exist.
-10. Do not use KaTex, LaTex, or special math symbols in your response- please use regular unicode characters only.
+10. You can sprinkle in some projects in too. Based on their experience, give them a project that they can work on, so that they can actually apply their skills. That way, they can feel that they actually made something!
+11. Do not use KaTex, LaTex, or special math symbols in your response- please use regular unicode characters only. Don't use special Mermaid diagrams either- those won't work.
 """
 #endregion
 client = genai.Client()

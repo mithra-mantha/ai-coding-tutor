@@ -51,8 +51,8 @@
             <input type="checkbox" id="update-html-preview-checkbox" class="html-stuff" checked>
             <label for="autosave-program-checkbox" title="Automatically save your code every time you stop typing.">Autosave your work:</label>
             <input type="checkbox" id="autosave-program-checkbox" checked>
-            <button id="save-program-button" disabled>Save</button>
-            <button id="update-html-preview-button" disabled class="html-stuff">Update HTML</button>
+            <button id="save-program-button" disabled title="The program will automatically save, so there's no need to do it manually.">Save</button>
+            <button id="update-html-preview-button" disabled title="The preview will automatically update, so there's no need to do it manually." class="html-stuff">Update HTML</button>
             <button id="run-python-button" class="python-stuff">Run</button>
             <label for="language-selection">Select language: </label>
             <select id="language-selection">
@@ -382,16 +382,16 @@ $("#python-module-container").on("click", function (event) {
 });
 $("#autosave-program-checkbox").on("change", function () {
     if (this.checked) {
-        $("#save-program-button").prop("disabled", true);
+        $("#save-program-button").prop("disabled", true).attr("title", "Your program will automatically save, so there's no need to do it manually.");
     } else {
-        $("#save-program-button").prop("disabled", false);
+        $("#save-program-button").prop("disabled", false).attr("title", "");
     }
 });
 $("#update-html-preview-checkbox").on("change", function () {
     if (this.checked) {
-        $("#update-html-preview-button").prop("disabled", true);
+        $("#update-html-preview-button").prop("disabled", true).attr("title", "The preview will automatically update, so there's no need to do it manually.");
     } else {
-        $("#update-html-preview-button").prop("disabled", false);
+        $("#update-html-preview-button").prop("disabled", false).attr("title", "");
     }
 });
 $("#save-program-button").on("click", saveProgram);

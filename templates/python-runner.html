@@ -4,10 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <style>
+        :root {
+            font-family: 'Courier New', Courier, monospace;
+        }
         #result {
             width: 100%;
             height: 100%;
-            font-family: 'Courier New', Courier, monospace;
             white-space: pre-wrap;
             word-wrap: break-word;
         }
@@ -17,16 +19,24 @@
     </style>
 </head>
 <body>
+    <span id="info"></span>
     <pre><div id="result"></div></pre>
     <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
     <script>
+"use strict";
+const globals = {
+    anythingLogged:null,
+};
 (async () => {
+    $("#info").text("Loading Python...")
     window.pyodide = await loadPyodide({
         stdout:(text) => {
             $("#result").append($("<div class='python-output'></div>").text(text))
+            globals.anythingLogged = true;
         },
     });
+    $("#info").text("")
 })();
 function onPythonError(error) {
     $("#result").append($("<div class='python-error'></div>").text(error))
@@ -58,7 +68,9 @@ window.addEventListener("message", async function (event) {
     if (event.data.reason !== "RUN_CODE") {
         return;
     }
+    globals.anythingLogged = false;
     $("#result").empty();
+    $("#info").text("");
     const pythonModules = event.data.modules;
     const newInputFunc = `
 # Redefine the input() function
@@ -101,6 +113,9 @@ importlib.invalidate_caches()
 import runpy
 runpy.run_path('/main.py', run_name='__main__')
 `)
+        if (!globals.anythingLogged) {
+            $("#info").text("Code ran successfully!")
+        }
     } catch (error) {
         if (error.name === "PythonError") {
             let formattedStr = 'Traceback: (most recent call last)\n File "main.py" ' + error.message.split(/File \"\/?main\.py\"/i).slice(1).join('\nFile "main.py"');

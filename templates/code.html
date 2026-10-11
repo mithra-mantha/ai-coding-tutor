@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/css/ace.min.css">
     <link rel="stylesheet" href="{{url_for('static', filename='global-themes.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='code-styles.css')}}">
+    <link rel="preload" as="image" href="{{url_for('static', filename='loader.gif')}}" id="loader-gif-preloader" fetchpriority="auto">
+    <link rel="preload" as="image" href="{{url_for('static', filename='saved-icon.svg')}}" fetchpriority="low">
     <style>
         #editor-above p {
             --before-image-src: none;
@@ -457,6 +459,7 @@ $("#message-form").on("submit", async function (event) {
             program[moduleName + ".py"] = session.getValue();
         }
     }
+    $("<div class='message ai-message temporary'></div>").append(`<img src='${$("#loader-gif-preloader").attr("href")}'>`).appendTo("#messages-container");
     try {
         const rawResponse = await fetch("/api/chat", {
             method: $("#messages-container").children().length < 2 ? "POST" : "PATCH",
@@ -471,7 +474,7 @@ $("#message-form").on("submit", async function (event) {
         const response = await rawResponse.json();
         if (!response.message) {
             if (response.warning) {
-                alert("The chat response failed for an unknown reason. Try again.");
+                addMessageToChat("The message failed for an unknown reason. Please try again.", false)
                 console.warn("Request failed because of " + response.warning)
                 return;
             }
@@ -491,6 +494,9 @@ $("#message-form").on("submit", async function (event) {
         )
     } catch (error) {
         console.error(error);
+        addMessageToChat("The message failed for an unknown reason. Please try again.", false)
+    } finally {
+        $("#messages-container .ai-message.temporary").remove();
     }
 });
 $("#new-chat-button").on("click", async function () {

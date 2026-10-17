@@ -47,6 +47,15 @@ htmlSession.setValue($("body").attr("data-html-program"));
     if ($("#python-module-container").children().length > 1) {
         $("#main-python-module").addClass("selected-python-module");
     }
+    const selected = localStorage.getItem("language-selected");
+    if (!selected || selected === "html") {
+        setTimeout(showPreview, 100);
+    } else if (selected === "python") {
+        setTimeout(() => {
+            $("#language-selection").val("python")
+            $("#language-selection").trigger("change")
+        }, 0)
+    }
 })();
 editor.setSession(htmlSession);
 editor.setTheme("ace/theme/dawn");
@@ -181,14 +190,16 @@ $("#language-selection").on("change", function (event) {
     const newVal = $(event.target).val();
     if (newVal === "python") {
         editor.setSession(mainPySession);
-        $(".html-stuff").hide();
+        $(".html-stuff, #error-div").hide();
         $(".python-stuff").show();
         globals.currentLanguage = "python";
+        localStorage.setItem("language-selected", "python");
     } else if (newVal === "html") {
         editor.setSession(htmlSession);
         $(".python-stuff").hide();
         $(".html-stuff").show();
         globals.currentLanguage = "html";
+        localStorage.setItem("language-selected", "html");
     }
 });
 $("#run-python-button").on("click", function () {
@@ -389,4 +400,3 @@ $("#logout-button").on("click", async function () {
         window.location.href = response.link;
     }
 });
-setTimeout(showPreview, 100);

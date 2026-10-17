@@ -8,8 +8,11 @@
     <link rel="stylesheet" href="{{url_for('static', filename='global-themes.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='code-styles.css')}}">
     <link rel="preload" as="image" href="{{url_for('static', filename='loader.gif')}}" id="loader-gif-preloader"
-        fetchpriority="auto">
+        fetchpriority="low">
     <link rel="preload" as="image" href="{{url_for('static', filename='saved-icon.svg')}}" fetchpriority="low">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ace.min.js" defer></script>
+    <script src="{{ url_for('static', filename='code-script.js') }}" defer></script>
     <style>
         #editor-above p {
             --before-image-src: none;
@@ -145,11 +148,8 @@
             <progress max="60" value="60" class="progress-bar"></progress>
         </dialog>
     </div>
-    <div id="error-div" style="display: none;" class="html-stuff"><button id="close-error-div">&#10005;</button>
+    <div id="error-div" style="display: none;"><button id="close-error-div">&#10005;</button>
         <p></p>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.5/cash.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ace.min.js"></script>
-    <script src="{{ url_for('static', filename='code-script.js') }}"></script>
 </body>
 </html>

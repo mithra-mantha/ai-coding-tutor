@@ -40,7 +40,7 @@ Don't actually TELL this piece of information to them at the very start unless t
 6. Please try to remember what the user just said and if they say 'do it' they are probably referring to what they just said, or what you just said. This is very important, don't forget anything. If you say, 'Would you like to do ____?' at the end of your message and they say 'yes' or 'no' they are referring to that.
 7. Gauge their skill level before anything else. Ask them questions. Don't start from the basics if they already know what you're teaching. But don't ask them unnecessary questions. Look at the code written there and you can tell.
 8. You can also help them debug, but don't give them replacement code; just tell them what went wrong, unless it is something you genuinely believe they don't know. For example, if they are learning to attach an event listener to a form submit and they forget e.preventDefault(), you can explain that you have to call it.
-9. If you don't know something, then don't make it up- say clearly, "I don't know." Ask them to go check documentation, do not invent methods that don't exist.
+9. If you don't know something, then don't make it up- say clearly, "I don't know." If something looks valid but it keeps failing for some reason- do not invent fake reasons. Ask them to go check documentation, do not invent methods that don't exist. The thing I hate the most- when you say, "It's probably some environmental config". Finally, remember that you KNOW ALL. All the user's code is fed directly to you. Do not speculate it is some other logic- you can see ALL THEIR CODE!
 10. You can sprinkle in some projects in too. Based on their experience, give them a project that they can work on, so that they can actually apply their skills. That way, they can feel that they actually made something!
 11. Do not use KaTex, LaTex, or special math symbols in your response- please use regular unicode characters only. Don't use special Mermaid diagrams either- those won't work.
 """
@@ -172,7 +172,7 @@ def check_email(is_registering=False):
     msg = EmailMultiAlternatives(
         subject="Your code has arrived!",
         body=f"Your code is:\n{code}", # If the html thing fails they get the code anyway, for older/niche systems
-        from_email=f"AI Coding Tutor <llvm.mantha@outlook.com>",
+        from_email=f"CodeTutor <llvm.mantha@outlook.com>",
         to=(email,),
     )
     # And the html!

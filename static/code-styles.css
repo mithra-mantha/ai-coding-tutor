@@ -1092,8 +1092,14 @@ body.chat-hidden #code {
 
 #python-module-container .selected-python-module {
   border-color: var(--button-border);
-  background: var(--button-selected-background);
+  background: var(--editor-bg);
   color: var(--button-text);
+}
+
+#python-module-container .python-module:not(.selected-python-module) {
+  background: var(--button-selected-background);
+  color: var(--muted);
+  filter: blur(0.2px);
 }
 
 #python-module-container .python-module:not(:disabled):hover,
@@ -1129,9 +1135,15 @@ body.chat-hidden #code {
   transform: translateY(-1px);
 }
 
+#python-module-container .python-module:not(.selected-python-module):not(:disabled):hover,
+#python-module-container .python-module:not(.selected-python-module):not(:disabled):focus-visible {
+  background: var(--button-selected-background);
+  color: var(--muted);
+}
+
 #python-module-container .selected-python-module:not(:disabled):hover,
 #python-module-container .selected-python-module:not(:disabled):focus-visible {
-  background: var(--button-hover-background);
+  background: var(--editor-bg);
 }
 
 #save-program-button:disabled,
